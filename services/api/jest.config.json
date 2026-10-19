@@ -1,0 +1,24 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "roots": ["<rootDir>/src"],
+  "testMatch": ["**/__tests__/**/*.test.ts", "**/*.test.ts"],
+  "transform": {
+    "^.+\\.tsx?$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1"
+  },
+  "setupFiles": ["<rootDir>/src/__tests__/setup.ts"],
+  "globalSetup": "<rootDir>/src/__tests__/globalSetup.ts",
+  "globalTeardown": "<rootDir>/src/__tests__/globalTeardown.ts",
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/__tests__/**",
+    "!src/index.ts",
+    "!src/docs/**"
+  ],
+  "coverageThreshold": {
+    "global": { "branches": 50, "functions": 60, "lines": 60, "statements": 60 }
+  }
+}

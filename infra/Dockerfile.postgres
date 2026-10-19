@@ -1,0 +1,13 @@
+FROM alpine:latest
+
+RUN apk add --no-cache postgresql16 postgresql16-contrib su-exec tzdata
+
+ENV PGDATA=/var/lib/postgresql/data
+ENV PATH="/usr/lib/postgresql16/bin:${PATH}"
+
+COPY init-pg.sh /init-pg.sh
+RUN tr -d '\r' < /init-pg.sh > /init-pg-unix.sh && mv /init-pg-unix.sh /init-pg.sh && chmod +x /init-pg.sh
+
+EXPOSE 5432
+
+ENTRYPOINT ["/init-pg.sh"]
