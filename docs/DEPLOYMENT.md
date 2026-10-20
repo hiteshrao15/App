@@ -117,6 +117,11 @@ Do not use `npm ci --omit=dev` or `npm install --production` as the build
 command. Those commands remove `@types/express`, `@types/multer`, `@types/uuid`,
 and TypeScript build dependencies before `tsc` runs.
 
+The repository also contains a root `.npmrc` with `include=dev`, so the
+existing `npm install && npm run build` command will install the TypeScript
+build dependencies even when Render sets `NODE_ENV=production`. Trigger a new
+deploy after pulling this change.
+
 ### Local file storage while R2 is unavailable
 
 The API uses local disk storage for uploaded product and store images. Files
