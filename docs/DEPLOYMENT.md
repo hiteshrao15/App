@@ -21,6 +21,42 @@ npm run dev
 - **Admin Dashboard**: Hosted on Cloudflare Pages, Vercel, or Netlify
 - **Mobile Application**: Built via Expo EAS (`eas build -p android` and `eas build -p ios`)
 
+### Showing the mobile app on iOS and Android without publishing
+
+You do not need an Apple Developer or Google Play Developer account to show
+the app using Expo Go:
+
+1. Install **Expo Go** from the App Store on the iPhone and from Google Play
+   on the Android phone.
+2. Start PostgreSQL, Redis, and the API:
+
+```powershell
+npm run infra:up
+npm run db:migrate
+npm run dev:api
+```
+
+3. Find the computer's private IPv4 address with `ipconfig`.
+4. Set that address in `apps/mobile/.env`:
+
+```ini
+EXPO_PUBLIC_API_URL=http://192.168.1.25:3000/api/v1
+```
+
+5. Start Expo from the repository root:
+
+```powershell
+npm run dev:mobile -- --lan --clear
+```
+
+6. Connect both phones and the computer to the same Wi-Fi, then scan the QR
+   code with Expo Go. This works on iOS and Android without publishing to
+   either store.
+
+This LAN method is the most reliable no-account option. It will not work when
+the client is on another network. A remote demonstration requires a temporary
+HTTPS tunnel or hosted API, and tunnel services may require an account.
+
 ### Running the mobile app on a real phone
 
 `localhost` on a phone means the phone itself, not the computer running the API. Use the
@@ -61,4 +97,59 @@ REDIS_URL=redis://localhost:6379
 JWT_SECRET=super_secret_bottlebazaar_jwt_signing_key_2026
 JWT_REFRESH_SECRET=super_secret_refresh_key_bottlebazaar_2026
 DEV_MOCK_OTP=true
+UPLOAD_DIR=uploads
 ```
+
+### Render API build settings
+
+The API TypeScript build requires the type packages listed in workspace
+`devDependencies`, even when the runtime environment is production. Configure
+the Render service with:
+
+```text
+Root Directory: .
+Build Command: npm ci --include=dev && npm run build --workspace=services/api
+Start Command: npm run start --workspace=services/api
+Health Check Path: /health
+```
+
+Do not use `npm ci --omit=dev` or `npm install --production` as the build
+command. Those commands remove `@types/express`, `@types/multer`, `@types/uuid`,
+and TypeScript build dependencies before `tsc` runs.
+
+### Local file storage while R2 is unavailable
+
+The API uses local disk storage for uploaded product and store images. Files
+are written to `services/api/uploads` by default and served from
+`/uploads/...`. This is suitable for a local client demonstration only: files
+can be lost when a hosting service redeploys, and phones cannot reach files on
+a developer laptop through the hosted Render API. Keep the API and phones on
+the same LAN when using local uploads.
+
+For a laptop-independent deployment, create a Supabase Storage bucket and set
+these variables in the Render API environment:
+
+```ini
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-server-only-service-role-key
+SUPABASE_STORAGE_BUCKET=bottlebazaar
+SUPABASE_PUBLIC_BASE_URL=https://your-project.supabase.co/storage/v1/object/public/bottlebazaar
+```
+
+The bucket must allow public reads if product images are displayed directly
+in the mobile app. Keep the service-role key only on Render; never put it in
+the mobile app or commit it.
+
+## Showing the app when the laptop is off
+
+The permanent setup is:
+
+1. Keep the API, PostgreSQL, and Redis on Render/Railway.
+2. Configure Supabase Storage for persistent images.
+3. Build an Android preview APK once and install it on the presentation phone.
+4. On iPhone, use Expo Go with a hosted Expo project or later create an iOS
+   distribution build. An iOS standalone install requires Apple signing.
+
+Expo Go using a LAN QR code is only a development demonstration and requires
+the laptop to remain on. An Android APK does not require the laptop after
+installation, but creating the APK with EAS requires an Expo account.

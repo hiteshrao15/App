@@ -7,16 +7,21 @@ import { mobileApi, ClaimedVoucher } from '../services/api';
 export const WalletScreen: React.FC = () => {
   const [vouchers, setVouchers] = useState<ClaimedVoucher[]>([]);
   const [selectedVoucher, setSelectedVoucher] = useState<ClaimedVoucher | null>(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadVouchers();
   }, []);
 
   const loadVouchers = async () => {
-    const list = await mobileApi.getClaimedVouchers();
-    setVouchers(list);
-    if (list.length > 0 && !selectedVoucher) {
-      setSelectedVoucher(list[0]);
+    try {
+      const list = await mobileApi.getClaimedVouchers();
+      setVouchers(list);
+      if (list.length > 0 && !selectedVoucher) {
+        setSelectedVoucher(list[0]);
+      }
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Could not load your vouchers.');
     }
   };
 
@@ -28,6 +33,7 @@ export const WalletScreen: React.FC = () => {
         <Text style={styles.title}>🎟️ My Vouchers & Passes</Text>
         <Text style={styles.subtitle}>Present active QR code to the retail counter cashier</Text>
       </View>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <ScrollView contentContainerStyle={styles.container}>
         {selectedVoucher ? (
@@ -118,6 +124,12 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     color: colors.textSecondary,
     marginTop: 2,
+  },
+  errorText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   container: {
     padding: 16,

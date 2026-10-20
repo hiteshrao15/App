@@ -6,6 +6,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
+import path from 'path';
 import { rateLimit } from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './docs/swagger';
@@ -105,7 +106,8 @@ export function createApp(): Express {
   app.use('/api/v1/admin', adminRouter);
 
   // ── Static file serving for uploads ──────────────────
-  app.use('/uploads', express.static('uploads'));
+  const uploadDir = process.env.UPLOAD_DIR || 'uploads';
+  app.use('/uploads', express.static(path.resolve(uploadDir)));
 
   // ── 404 handler ───────────────────────────────────────
   app.use((_req: Request, res: Response) => {

@@ -10,8 +10,8 @@ interface Props {
 
 export const LoginModal: React.FC<Props> = ({ visible, onClose }) => {
   const { requestOtp, verifyOtp } = useAuth();
-  const [phone, setPhone] = useState('9820000000');
-  const [otp, setOtp] = useState('123456');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,9 +25,14 @@ export const LoginModal: React.FC<Props> = ({ visible, onClose }) => {
     }
     setError('');
     setLoading(true);
-    await requestOtp(phone);
-    setLoading(false);
-    setStep('OTP');
+    try {
+      await requestOtp(phone);
+      setStep('OTP');
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Could not send OTP.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVerifyOtp = async () => {
@@ -37,13 +42,18 @@ export const LoginModal: React.FC<Props> = ({ visible, onClose }) => {
     }
     setError('');
     setLoading(true);
-    const ok = await verifyOtp(phone, otp);
-    setLoading(false);
-    if (ok) {
-      onClose();
-      setStep('PHONE');
-    } else {
-      setError('Invalid OTP code. For dev, use 123456');
+    try {
+      const ok = await verifyOtp(phone, otp);
+      if (ok) {
+        onClose();
+        setStep('PHONE');
+      } else {
+        setError('Invalid OTP code.');
+      }
+    } catch (verifyError) {
+      setError(verifyError instanceof Error ? verifyError.message : 'Could not verify OTP.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,7 +71,7 @@ export const LoginModal: React.FC<Props> = ({ visible, onClose }) => {
           <Text style={styles.subtitle}>
             {step === 'PHONE' 
               ? 'Enter your phone number to claim in-store discount coupons and save favorites.'
-              : `6-digit verification code sent to +91 ${phone} (Dev OTP: 123456)`}
+              : `Enter the 6-digit verification code sent to +91 ${phone}`}
           </Text>
 
           {step === 'PHONE' ? (

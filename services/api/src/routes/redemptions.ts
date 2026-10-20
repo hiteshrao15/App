@@ -226,7 +226,7 @@ router.get('/history', authenticate, async (req: Request, res: Response, next: N
     const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
 
     const { rows } = await pool.query(`
-      SELECT rt.id, rt.status, rt.issued_at, rt.redeemed_at, rt.expires_at,
+      SELECT rt.id, rt.offer_id, rt.status, rt.issued_at, rt.redeemed_at, rt.expires_at,
              o.title, o.offer_type,
              s.name as store_name, s.city as store_city
       FROM redemption_tokens rt

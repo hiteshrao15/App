@@ -13,11 +13,15 @@ export const StoresScreen: React.FC<Props> = ({ onSelectStore }) => {
   const { location } = useLocation();
   const [stores, setStores] = useState<StoreItem[]>([]);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     (async () => {
-      const list = await mobileApi.getStores();
-      setStores(list);
+      try {
+        setStores(await mobileApi.getStores(location.city));
+      } catch {
+        setError('Live store data is temporarily unavailable. Please try again.');
+      }
     })();
   }, []);
 
@@ -57,6 +61,17 @@ export const StoresScreen: React.FC<Props> = ({ onSelectStore }) => {
           onChangeText={setSearch}
         />
       </View>
+      {error ? (
+        <View style={styles.errorCard}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity onPress={() => {
+            setError('');
+            mobileApi.getStores(location.city).then(setStores).catch(() => setError('Live store data is temporarily unavailable. Please try again.'));
+          }}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <ScrollView contentContainerStyle={styles.list}>
         {filtered.map((store) => (
@@ -91,6 +106,9 @@ export const StoresScreen: React.FC<Props> = ({ onSelectStore }) => {
             </View>
           </View>
         ))}
+        {!error && filtered.length === 0 ? (
+          <Text style={styles.emptyText}>No approved stores are available in this location.</Text>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -215,5 +233,30 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 11.5,
     fontWeight: '800',
+  },
+  errorCard: {
+    margin: 16,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(192, 89, 89, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(192, 89, 89, 0.4)',
+  },
+  errorText: {
+    color: colors.textPrimary,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  retryText: {
+    color: colors.accentGold,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  emptyText: {
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingVertical: 40,
+    fontSize: 13,
   },
 });

@@ -29,6 +29,7 @@ export const HomeScreen: React.FC<Props> = ({ onSelectDeal, onSelectStore, onOpe
   const [stores, setStores] = useState<StoreItem[]>([]);
   const [deals, setDeals] = useState<DealItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Whiskey');
 
   useEffect(() => {
@@ -36,12 +37,17 @@ export const HomeScreen: React.FC<Props> = ({ onSelectDeal, onSelectStore, onOpe
   }, [location.city]);
 
   const loadData = async () => {
-    const [s, d] = await Promise.all([
-      mobileApi.getStores(),
-      mobileApi.getDeals(),
-    ]);
-    setStores(s);
-    setDeals(d);
+    setError('');
+    try {
+      const [s, d] = await Promise.all([
+        mobileApi.getStores(location.city),
+        mobileApi.getDeals(location.city),
+      ]);
+      setStores(s);
+      setDeals(d);
+    } catch {
+      setError('We could not load live stores and offers. Check your connection and try again.');
+    }
   };
 
   const onRefresh = async () => {
@@ -88,6 +94,14 @@ export const HomeScreen: React.FC<Props> = ({ onSelectDeal, onSelectStore, onOpe
         showsVerticalScrollIndicator={false}
         refreshControl={<RNRefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentGold} />}
       >
+        {error ? (
+          <RNView style={styles.errorCard}>
+            <RNText style={styles.errorText}>{error}</RNText>
+            <RNTouchableOpacity onPress={loadData} style={styles.retryButton}>
+              <RNText style={styles.retryText}>Retry</RNText>
+            </RNTouchableOpacity>
+          </RNView>
+        ) : null}
         {/* Compliance Notice Badge */}
         <RNView style={styles.complianceBadge}>
           <RNText style={styles.complianceText}>
@@ -247,6 +261,32 @@ const styles = RNStyleSheet.create({
     backgroundColor: colors.bgCard,
     borderWidth: 1,
     borderColor: colors.borderAccent,
+  },
+  errorCard: {
+    margin: 16,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(192, 89, 89, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(192, 89, 89, 0.4)',
+  },
+  errorText: {
+    color: colors.textPrimary,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  retryButton: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: colors.accentGold,
+  },
+  retryText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '800',
   },
   heroTag: {
     color: colors.accentGold,

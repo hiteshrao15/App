@@ -14,11 +14,15 @@ export const DealsScreen: React.FC<Props> = ({ onOpenWallet, onPromptLogin }) =>
   const { isAuthenticated } = useAuth();
   const [deals, setDeals] = useState<DealItem[]>([]);
   const [selectedFilter, setSelectedFilter] = useState('ALL');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     (async () => {
-      const list = await mobileApi.getDeals();
-      setDeals(list);
+      try {
+        setDeals(await mobileApi.getDeals());
+      } catch {
+        setError('Live offers are temporarily unavailable. Please try again.');
+      }
     })();
   }, []);
 
@@ -27,7 +31,12 @@ export const DealsScreen: React.FC<Props> = ({ onOpenWallet, onPromptLogin }) =>
       onPromptLogin();
       return;
     }
-    await mobileApi.claimDeal(deal);
+    try {
+      await mobileApi.claimDeal(deal);
+    } catch (claimError) {
+      Alert.alert('Could not claim offer', claimError instanceof Error ? claimError.message : 'Please try again.');
+      return;
+    }
     Alert.alert(
       '🎉 Voucher Claimed!',
       `Coupon code for "${deal.title}" is now active in your Wallet! Valid for 30 minutes at checkout.`,
@@ -66,6 +75,17 @@ export const DealsScreen: React.FC<Props> = ({ onOpenWallet, onPromptLogin }) =>
           })}
         </ScrollView>
       </View>
+      {error ? (
+        <View style={styles.errorCard}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity onPress={() => {
+            setError('');
+            mobileApi.getDeals().then(setDeals).catch(() => setError('Live offers are temporarily unavailable. Please try again.'));
+          }}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <ScrollView contentContainerStyle={styles.list}>
         {filtered.map((deal) => (
@@ -226,5 +246,24 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 13,
     fontWeight: '800',
+  },
+  errorCard: {
+    margin: 16,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(192, 89, 89, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(192, 89, 89, 0.4)',
+  },
+  errorText: {
+    color: colors.textPrimary,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  retryText: {
+    color: colors.accentGold,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 8,
   },
 });

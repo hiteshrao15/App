@@ -3,6 +3,7 @@
 // =====================================================
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mobileApi } from '../services/api';
 
 export interface MobileUser {
   id: string;
@@ -41,7 +42,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAgeVerified(true);
         }
         if (savedUser) {
-          setUser(JSON.parse(savedUser));
+          try {
+            const profile = await mobileApi.getProfile();
+            setUser({
+              id: profile.id,
+              phoneNumber: profile.phone,
+              name: profile.displayName,
+              ageDeclared: profile.ageDeclared,
+              ageDeclaredDate: profile.ageDeclaredAt,
+            });
+            setIsAgeVerified(profile.ageDeclared);
+          } catch {
+            await AsyncStorage.removeItem('@bottlebazaar_user');
+            await AsyncStorage.removeItem('@bottlebazaar_access_token');
+          }
         }
       } catch (e) {}
     })();
@@ -53,6 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.setItem('@bottlebazaar_birth_year', String(birthYear));
 
     if (user) {
+      await mobileApi.declareAge();
       const updated = { ...user, ageDeclared: true, birthYear };
       setUser(updated);
       await AsyncStorage.setItem('@bottlebazaar_user', JSON.stringify(updated));
@@ -60,30 +75,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const requestOtp = async (phone: string): Promise<boolean> => {
-    // In production, hits POST /api/auth/otp/send
+    await mobileApi.requestOtp(phone);
     return true;
   };
 
   const verifyOtp = async (phone: string, otp: string): Promise<boolean> => {
-    // Accept valid 6 digit or dev '123456'
-    if (otp === '123456' || otp.length === 6) {
-      const loggedUser: MobileUser = {
-        id: `u-${Date.now()}`,
-        phoneNumber: phone.startsWith('+91') ? phone : `+91 ${phone}`,
-        name: 'Connoisseur',
-        ageDeclared: isAgeVerified,
-        ageDeclaredDate: new Date().toISOString(),
-      };
-      setUser(loggedUser);
-      await AsyncStorage.setItem('@bottlebazaar_user', JSON.stringify(loggedUser));
-      return true;
+    if (!/^\d{6}$/.test(otp)) return false;
+    const profile = await mobileApi.verifyOtp(phone, otp);
+    const loggedUser: MobileUser = {
+      id: profile.user.id,
+      phoneNumber: profile.user.phone,
+      name: profile.user.displayName,
+      ageDeclared: profile.user.ageDeclared,
+      ageDeclaredDate: profile.user.ageDeclaredAt,
+    };
+    setUser(loggedUser);
+    setIsAgeVerified(profile.user.ageDeclared);
+    await AsyncStorage.setItem('@bottlebazaar_user', JSON.stringify(loggedUser));
+    if (isAgeVerified && !profile.user.ageDeclared) {
+      await mobileApi.declareAge();
+      const updated = { ...loggedUser, ageDeclared: true, ageDeclaredDate: new Date().toISOString() };
+      setUser(updated);
+      await AsyncStorage.setItem('@bottlebazaar_user', JSON.stringify(updated));
+      setIsAgeVerified(true);
     }
-    return false;
+    return true;
   };
 
   const logout = async () => {
+    await mobileApi.logout();
     setUser(null);
-    await AsyncStorage.removeItem('@bottlebazaar_user');
+    setIsAgeVerified(false);
+    await AsyncStorage.multiRemove(['@bottlebazaar_user', '@bottlebazaar_age_declared', '@bottlebazaar_birth_year']);
   };
 
   return (

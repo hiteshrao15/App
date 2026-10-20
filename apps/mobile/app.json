@@ -9,20 +9,22 @@
       "supportsTablet": true,
       "bundleIdentifier": "in.bottlebazaar.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "BottleBazaar uses your location to discover licensed liquor stores nearby and check state excise rules."
+        "NSLocationWhenInUseUsageDescription": "BottleBazaar uses your location to discover licensed liquor stores nearby and check state excise rules.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0a0b0e"
-      },
       "package": "in.bottlebazaar.app",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ]
     },
-    "web": {}
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "cda60f0c-7dae-4613-9af3-d07114360e67"
+      }
+    }
   }
 }
