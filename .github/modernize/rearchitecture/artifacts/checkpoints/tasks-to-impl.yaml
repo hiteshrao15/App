@@ -1,0 +1,65 @@
+metadata:
+  generated: "2026-10-25T06:00:00Z"
+  source_tasks: "artifacts/plan.md#Implementation Steps and Embedded Tasks"
+  last_updated: "2026-10-25T06:00:00Z"
+summary:
+  total_tasks: 5
+  completed_tasks: 5
+  in_progress_tasks: 0
+  pending_tasks: 0
+  completion_percentage: 100.0
+tasks:
+  - task_id: "T001"
+    description: "Create Spring Boot Maven service and Java 21 wrapper"
+    status: "completed"
+    implementation:
+      files_changed: ["services/api-java/pom.xml", "services/api-java/mvnw", "services/api-java/mvnw.cmd", "services/api-java/.mvn/wrapper/maven-wrapper.properties"]
+    verification:
+      build_passed: true
+      test_results: {command: "mvn -B --no-transfer-progress verify", passed: 1, failed: 0, skipped: 0, failures: []}
+    upstream_trace: {plan_item: "1.1", requirements: ["REQ-023", "NFR-004", "NFR-005"]}
+  - task_id: "T002"
+    description: "Add package skeleton, health/readiness and correlation ID"
+    status: "completed"
+    implementation:
+      files_changed: ["services/api-java/src/main/java/com/bottlebazaar/platform/BottleBazaarApplication.java", "services/api-java/src/main/java/com/bottlebazaar/platform/http/CorrelationIdFilter.java"]
+    verification:
+      build_passed: true
+      test_results: {command: "GET /actuator/health", passed: 1, failed: 0, skipped: 0, failures: []}
+    upstream_trace: {plan_item: "1.1", requirements: ["REQ-023"]}
+  - task_id: "T003"
+    description: "Add environment-bound application profiles"
+    status: "completed"
+    implementation:
+      files_changed: ["services/api-java/src/main/resources/application.yml", "services/api-java/src/main/resources/application-test.yml"]
+    verification: {build_passed: true}
+    upstream_trace: {plan_item: "1.1", requirements: ["NFR-004"]}
+  - task_id: "T004"
+    description: "Add Java/client CI workflow and artifact retention"
+    status: "completed"
+    implementation:
+      files_changed: [".github/workflows/ci.yml"]
+    verification: {build_passed: true}
+    upstream_trace: {plan_item: "1.1", requirements: ["NFR-004", "NFR-005"]}
+  - task_id: "T006"
+    description: "Document legacy feature flag and reversible migration cutover"
+    status: "completed"
+    implementation:
+      files_changed: ["infra/migration/README.md", "services/api-java/README.md"]
+    verification: {build_passed: true}
+    upstream_trace: {plan_item: "1.2", requirements: ["REQ-023", "NFR-004"]}
+pending_tasks: []
+untracked_changes: []
+traceability_chain:
+  - chain_id: "TRACE-T11"
+    requirement: "REQ-023"
+    plan_phase: "Phase-1"
+    plan_item: "1.1/1.2"
+    tasks: ["T001", "T002", "T003", "T004", "T006"]
+    files: ["services/api-java", ".github/workflows/ci.yml", "infra/migration/README.md"]
+    status: "complete"
+validation:
+  passed: true
+  errors: []
+  warnings: ["Maven wrapper plugin returned 1 after generating scripts; pinned properties were verified manually."]
+  blocking_issues: []

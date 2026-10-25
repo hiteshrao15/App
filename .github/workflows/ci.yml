@@ -1,0 +1,47 @@
+name: BottleBazaar CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  java:
+    name: Spring Boot (Java 21)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api-java
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21.0.12"
+          cache: maven
+      - name: Verify API
+        run: mvn -B --no-transfer-progress verify
+      - name: Upload API artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bottlebazaar-api
+          path: services/api-java/target/*.jar
+
+  clients:
+    name: Existing clients
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.20.2"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+

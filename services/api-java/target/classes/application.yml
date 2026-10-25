@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: bottlebazaar-api
+  profiles:
+    default: local
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+app:
+  migration:
+    legacy-api-enabled: ${LEGACY_API_ENABLED:true}
+  geography:
+    timezone: ${APP_TIMEZONE:Asia/Kolkata}

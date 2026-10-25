@@ -1,0 +1,2 @@
+com\bottlebazaar\platform\BottleBazaarApplication.class
+com\bottlebazaar\platform\http\CorrelationIdFilter.class
