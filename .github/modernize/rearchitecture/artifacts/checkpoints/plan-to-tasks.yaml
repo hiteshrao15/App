@@ -1,0 +1,24 @@
+checkpoint: plan-to-tasks
+task_id: t7
+status: PASS
+plan: artifacts/plan.md
+task_count: 72
+phases:
+  "1": {plan_items: [1.1, 1.2], tasks: [T001, T002, T003, T004, T005, T006, T007]}
+  "2": {plan_items: [2.1, 2.2], tasks: [T008, T009, T010, T011, T012, T013, T014, T015]}
+  "3": {plan_items: [3.1, 3.2], tasks: [T016, T017, T018, T019, T020, T021, T022, T023, T024, T025]}
+  "4": {plan_items: [4.1, 4.2], tasks: [T026, T027, T028, T029, T030, T031, T032, T033, T034, T035]}
+  "5": {plan_items: [5.1, 5.2, 5.3], tasks: [T036, T037, T038, T039, T040, T041, T042, T043, T044, T045, T046, T047, T048, T049]}
+  "6": {plan_items: [6.1, 6.2], tasks: [T050, T051, T052, T053, T054, T055]}
+  "7": {plan_items: [7.1, 7.2], tasks: [T056, T057, T058, T059, T060, T061, T062, T063]}
+  "8": {plan_items: [8.1, 8.2], tasks: [T064, T065, T066, T067, T068, T069, T070, T071, T072]}
+validation:
+  passed: true
+  plan_items_total: 16
+  plan_items_covered: 16
+  coverage_percentage: 100%
+  task_count: 72
+  task_ids_sequential: true
+  tasks_missing_plan_reference: []
+  rewrite_tasks_missing_source_annotation: []
+  errors: []
