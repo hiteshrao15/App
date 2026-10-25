@@ -25,7 +25,7 @@ graph TD
     end
     
     subgraph "External Integrations"
-        AuthModule -.-> SMSGateway["Twilio / Fast2SMS Gateway"]
+        AuthModule -.-> SMSGateway["MSG91 OTP Gateway"]
         StoreModule -.-> GoogleMaps["Google Maps Platform API"]
     end
 ```

@@ -1,0 +1,6 @@
+unit: redemption
+bindings:
+  - {type: route-declaration, name: "redemptions router", source_loc: services/api/src/app.ts:100, target: redemption controller, must_appear_in_target: true, notes: "Customer issue and merchant validate."}
+  - {type: filter, name: "requireStoreOwner", source_loc: services/api/src/routes/redemptions.ts:139, target: validate endpoint, must_appear_in_target: true, notes: "Cashier authorization."}
+runtime_config:
+  - {key: REDIS_URL, source_loc: services/api/src/cache/redis.ts:5, source: env, default_value: "", must_appear_in_target: true, notes: "Distributed rate limits."}

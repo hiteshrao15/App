@@ -1,0 +1,4 @@
+unit: user-profile
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/users.ts:20-110, drivers: [concern_split], rationale: "Profile mutation, age consent and account deletion have distinct authorization and audit semantics.", source_slice: {file: services/api/src/routes/users.ts, lines: [20,110]}}

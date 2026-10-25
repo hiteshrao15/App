@@ -1,0 +1,4 @@
+unit: user-profile
+bindings:
+  - {type: route-declaration, name: "users router /me and /me/declare-age", source_loc: services/api/src/routes/users.ts:20, target: user controller, must_appear_in_target: true, notes: "Authenticated user-scoped routes."}
+runtime_config: []

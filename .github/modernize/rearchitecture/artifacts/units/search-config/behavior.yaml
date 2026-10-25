@@ -1,0 +1,8 @@
+unit: search-config
+side_effects: []
+branches:
+  - {source_loc: services/api/src/routes/search.ts:19, condition: "query/suggestion mode and optional filters", behavior: "return ranked/search or suggestion result", must_preserve: true}
+  - {source_loc: services/api/src/routes/config.ts:20, condition: "public config/jurisdiction request", behavior: "return active legal/config values only", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/search.ts:19, trigger: "missing query or invalid pagination", outcome: "validation error", contract: "400", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/search.ts:19, scope: "read-only query", isolation: "database default", must_preserve: true}}

@@ -1,0 +1,307 @@
+{
+  "schema": "clarification-questions/v1",
+  "generated_at": "2026-10-25T05:45:00Z",
+  "user_input": "Work directly in H:\\App on the BottleBazaar repository. The user has supplied a 2047-line master development prompt in the attached pasted text; its core requirement is a production-ready liquor discovery, store catalogue, discount reservation, and in-store QR redemption platform with customer, merchant, and admin roles; real backend/database/auth/business logic; responsive mobile and admin UX; legal age gates, dry-day controls, inventory, analytics, testing, and documentation. Existing repo is a TypeScript monorepo with Expo mobile, React/Vite admin, Express/PostgreSQL/Redis API. Do not blindly replace working code. Inspect the full repository and implement the highest-value complete rewrite/modernization needed to satisfy the requirements end-to-end. Use existing stack unless a change is necessary. Fix root causes, preserve working functionality, and run targeted builds/tests. Return a concise report of files changed, behavior implemented, validation results, and any concrete blockers. Do not only produce a plan; execute implementation.",
+  "title": "BottleBazaar production modernization",
+  "assessment_snapshot": {
+    "intro": "The repository is a TypeScript monorepo with mobile, admin, and API surfaces.",
+    "bullets": [
+      "Expo mobile and React/Vite admin are in scope",
+      "Express/PostgreSQL/Redis backend is in scope",
+      "The request requires production-grade auth, commerce, compliance, inventory, analytics, and validation"
+    ]
+  },
+  "proposed_outcome": "Modernize the existing BottleBazaar implementation in place, preserving working behavior while completing the highest-value end-to-end discovery, catalogue, reservation, redemption, and role-based administration flows.",
+  "scope": [
+    "frontend",
+    "backend",
+    "generic"
+  ],
+  "status": "answered",
+  "questions": [
+    {
+      "id": "F1",
+      "kit": "frontend",
+      "field": "target.framework",
+      "title": "Frontend targets",
+      "question": "Confirm the frontend targets and versions for mobile and admin surfaces.",
+      "importance": "required",
+      "impact": 5,
+      "recommended": null,
+      "default": "Keep existing Expo mobile and React/Vite admin stack; use currently declared versions.",
+      "prefilled": true,
+      "prefilled_value": "Keep existing Expo mobile and React/Vite admin stack; use currently declared versions.",
+      "answer": {
+        "value": "Redesign it completly and make it best in class",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "F2",
+      "kit": "frontend",
+      "field": "target.component_library",
+      "title": "UI component approach",
+      "question": "Which component library or design-system approach should be used for the responsive mobile and admin UX?",
+      "importance": "required",
+      "impact": 4,
+      "recommended": "Existing project primitives",
+      "default": "Existing project primitives",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "MUI",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Existing project primitives",
+          "label": "Existing project primitives and styles"
+        },
+        {
+          "value": "MUI",
+          "label": "Material UI"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F3",
+      "kit": "frontend",
+      "field": "visual.screenshots",
+      "title": "Reference visuals",
+      "question": "Provide screenshot or design references if available; otherwise allow implementation from existing screens and requirements.",
+      "importance": "recommended",
+      "impact": 3,
+      "recommended": null,
+      "default": "No external screenshots; use existing UI and requirements as the visual baseline.",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "No external screenshots; use existing UI and requirements as the visual baseline.",
+        "source": "default"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "B1",
+      "kit": "backend",
+      "field": "api.contract_policy",
+      "title": "API compatibility",
+      "question": "How should API compatibility be handled while completing the backend?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "Preserve existing contracts",
+      "default": "Preserve existing contracts and extend compatibly",
+      "prefilled": true,
+      "prefilled_value": "Preserve existing contracts and extend compatibly",
+      "answer": {
+        "value": "Preserve existing contracts and extend compatibly",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Preserve existing contracts",
+          "label": "Preserve existing contracts and extend compatibly"
+        },
+        {
+          "value": "Version breaking changes",
+          "label": "Version any breaking changes"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "B2",
+      "kit": "backend",
+      "field": "data_migration",
+      "title": "Data migration",
+      "question": "What data migration strategy should be used for existing PostgreSQL data and schema?",
+      "importance": "recommended",
+      "impact": 4,
+      "recommended": "Additive migrations",
+      "default": "Additive, reversible migrations preserving existing data",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "Additive, reversible migrations preserving existing data",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Additive migrations",
+          "label": "Additive, reversible migrations preserving existing data"
+        },
+        {
+          "value": "Reset non-production",
+          "label": "Reset/seed only non-production data"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "G1",
+      "kit": "generic",
+      "field": "target.location",
+      "title": "Implementation location",
+      "question": "Where should the modernization be implemented?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "In place",
+      "default": "In place",
+      "prefilled": true,
+      "prefilled_value": "In place",
+      "answer": {
+        "value": "In place",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "In place",
+          "label": "In place in H:\\App"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "G2",
+      "kit": "generic",
+      "field": "constraints.compliance",
+      "title": "Compliance constraints",
+      "question": "Which compliance constraints must be enforced?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": null,
+      "default": "Legal age gate, dry-day and jurisdiction controls, PII protection, and auditable redemption.",
+      "prefilled": true,
+      "prefilled_value": "Legal age gate, dry-day and jurisdiction controls, PII protection, and auditable redemption.",
+      "answer": {
+        "value": "Legal age gate, dry-day and jurisdiction controls, PII protection, and auditable redemption.",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "G3",
+      "kit": "generic",
+      "field": "testing.acceptance",
+      "title": "Acceptance validation",
+      "question": "What validation level is expected before completion?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "Targeted builds and tests",
+      "default": "Targeted builds and tests",
+      "prefilled": true,
+      "prefilled_value": "Targeted builds and tests",
+      "answer": {
+        "value": "Targeted builds and tests",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Targeted builds and tests",
+          "label": "Targeted builds/tests plus critical flow smoke checks"
+        },
+        {
+          "value": "Full suite",
+          "label": "Full repository suite where feasible"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "G4",
+      "kit": "generic",
+      "field": "delivery.scope",
+      "title": "Delivery scope",
+      "question": "Which delivery scope should be prioritized if the full master prompt exceeds one iteration?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "End-to-end critical path",
+      "default": "End-to-end critical path",
+      "prefilled": true,
+      "prefilled_value": "End-to-end critical path",
+      "answer": {
+        "value": "End-to-end critical path",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "End-to-end critical path",
+          "label": "Complete the end-to-end critical path across customer, merchant, and admin roles"
+        },
+        {
+          "value": "Frontend first",
+          "label": "Frontend-first polish"
+        },
+        {
+          "value": "Backend first",
+          "label": "Backend-first completeness"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "G5",
+      "kit": "generic",
+      "field": "constraints.additional",
+      "title": "Additional Constraints",
+      "question": "Add any additional constraints or decisions.",
+      "importance": "optional",
+      "impact": 2,
+      "recommended": null,
+      "default": "Do not blindly replace working code; preserve existing functionality and use the current stack unless necessary.",
+      "prefilled": true,
+      "prefilled_value": "Do not blindly replace working code; preserve existing functionality and use the current stack unless necessary.",
+      "answer": {
+        "value": "Do not blindly replace working code; preserve existing functionality and use the current stack unless necessary.",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    }
+  ]
+}

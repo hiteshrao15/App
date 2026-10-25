@@ -1,0 +1,5 @@
+unit: admin-governance
+bindings:
+  - {type: filter, name: "router.use(authenticate)", source_loc: services/api/src/routes/admin.ts:15, target: all admin endpoints, must_appear_in_target: true, notes: "No anonymous admin access."}
+  - {type: route-declaration, name: "admin router", source_loc: services/api/src/app.ts:106, target: governance controllers, must_appear_in_target: true, notes: "Moderator/admin role separation."}
+runtime_config: []

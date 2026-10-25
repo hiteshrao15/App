@@ -1,0 +1,8 @@
+unit: catalog
+side_effects: []
+branches:
+  - {source_loc: services/api/src/routes/products.ts:27, condition: "category/brand/search/pagination filters", behavior: "return active products with pagination", must_preserve: true}
+  - {source_loc: services/api/src/routes/products.ts:79, condition: "product id absent/inactive", behavior: "return not found", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/products.ts:118, trigger: "non-admin product mutation", outcome: "reject", contract: "403", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/products.ts:118, scope: "single product insert", isolation: "database default", must_preserve: true}}

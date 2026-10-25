@@ -125,6 +125,87 @@ const mapOffer = (offer: Record<string, unknown>): DealItem => ({
   terms: offer.custom_terms ? [String(offer.custom_terms)] : [],
 });
 
+const SAMPLE_SOHNA_STORES: StoreItem[] = [
+  {
+    id: 'sample-sohna-market',
+    name: '[SAMPLE] Sohna Market Bottle Shop',
+    address: 'Main Market, Sohna',
+    city: 'Sohna',
+    state: 'Haryana',
+    rating: 4.7,
+    reviewCount: 28,
+    distanceKm: 1.2,
+    isOpenToday: true,
+    isDryDay: false,
+    phone: '',
+    licenseNumber: 'Sample data',
+    dealsCount: 2,
+  },
+  {
+    id: 'sample-gurugram-road',
+    name: '[SAMPLE] Gurugram Road Spirits',
+    address: 'Gurugram Road, Sohna',
+    city: 'Sohna',
+    state: 'Haryana',
+    rating: 4.5,
+    reviewCount: 19,
+    distanceKm: 2.8,
+    isOpenToday: true,
+    isDryDay: false,
+    phone: '',
+    licenseNumber: 'Sample data',
+    dealsCount: 2,
+  },
+];
+
+const SAMPLE_SOHNA_DEALS: DealItem[] = [
+  {
+    id: 'sample-weekend-savings',
+    title: '[SAMPLE] Weekend bottle savings',
+    description: 'Save on selected bottles this weekend.',
+    discountType: 'PERCENTAGE',
+    discountValue: 10,
+    minSpend: 1000,
+    validUntil: '2026-12-31',
+    category: 'Weekend picks',
+    storeId: 'sample-sohna-market',
+    storeName: '[SAMPLE] Sohna Market Bottle Shop',
+    storeCity: 'Sohna',
+    storeDistanceKm: 1.2,
+    terms: ['Demo offer for the Sohna launch preview.'],
+  },
+  {
+    id: 'sample-first-order',
+    title: '[SAMPLE] First order welcome',
+    description: 'A welcome saving for your first in-store visit.',
+    discountType: 'FLAT',
+    discountValue: 150,
+    minSpend: 1500,
+    validUntil: '2026-12-31',
+    category: 'Welcome',
+    storeId: 'sample-gurugram-road',
+    storeName: '[SAMPLE] Gurugram Road Spirits',
+    storeCity: 'Sohna',
+    storeDistanceKm: 2.8,
+    terms: ['Demo offer; redemption is disabled until live store data is connected.'],
+  },
+  {
+    id: 'sample-bundle',
+    title: '[SAMPLE] Celebration bundle',
+    description: 'Special pricing on selected celebration bundles.',
+    discountType: 'BOGO',
+    discountValue: 0,
+    minSpend: 2000,
+    validUntil: '2026-12-31',
+    category: 'Bundles',
+    storeId: 'sample-gurugram-road',
+    storeName: '[SAMPLE] Gurugram Road Spirits',
+    storeCity: 'Sohna',
+    storeDistanceKm: 2.8,
+    terms: ['Demo offer for preview only.'],
+  },
+];
+
 export const mobileApi = {
   async requestOtp(phone: string): Promise<void> {
     await request('/auth/request-otp', {
@@ -162,6 +243,13 @@ export const mobileApi = {
     });
   },
 
+  async updateProfile(displayName: string, language: 'en' | 'hi'): Promise<void> {
+    await request('/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify({ displayName, language }),
+    });
+  },
+
   async logout(): Promise<void> {
     try {
       await request('/auth/logout', { method: 'POST' });
@@ -173,13 +261,15 @@ export const mobileApi = {
   async getStores(city?: string): Promise<StoreItem[]> {
     const query = city ? `?city=${encodeURIComponent(city)}` : '';
     const body = await request(`/stores${query}`) as { data?: Record<string, unknown>[] };
-    return (body.data || []).map(mapStore);
+    const stores = (body.data || []).map(mapStore);
+    return city === 'Sohna' && stores.length === 0 ? SAMPLE_SOHNA_STORES : stores;
   },
 
   async getDeals(city?: string): Promise<DealItem[]> {
     const query = city ? `?city=${encodeURIComponent(city)}` : '';
     const body = await request(`/offers${query}`) as { data?: Record<string, unknown>[] };
-    return (body.data || []).map(mapOffer);
+    const deals = (body.data || []).map(mapOffer);
+    return city === 'Sohna' && deals.length === 0 ? SAMPLE_SOHNA_DEALS : deals;
   },
 
   async getClaimedVouchers(): Promise<ClaimedVoucher[]> {

@@ -1,0 +1,4 @@
+unit: redemption
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/redemptions.ts:27-138, drivers: [lifecycle_split, execution_model_split], rationale: "Issuance and cashier validation have different actors, limits and atomic state transitions.", source_slice: {file: services/api/src/routes/redemptions.ts, lines: [27,138]}}

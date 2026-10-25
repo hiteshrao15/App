@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "cda60f0c-7dae-4613-9af3-d07114360e67"
+      }
+    },
+    "android": {
+      "package": "com.hitesh_rao15.bottlebazaar"
+    },
+    "ios": {
+      "bundleIdentifier": "y",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

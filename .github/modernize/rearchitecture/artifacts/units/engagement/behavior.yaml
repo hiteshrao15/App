@@ -1,0 +1,8 @@
+unit: engagement
+side_effects:
+  - {source_loc: services/api/src/routes/favorites.ts:41, effect: "Persist user favorite target and notification read state.", must_preserve: true}
+branches:
+  - {source_loc: services/api/src/routes/notifications.ts:25, condition: "notification id belongs to user", behavior: "mark one notification read; otherwise no cross-user mutation", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/favorites.ts:58, trigger: "favorite not owned by user", outcome: "not found/forbidden", contract: "404 or 403", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/favorites.ts:41, scope: "single favorite insert/delete", isolation: "database default", must_preserve: true}}

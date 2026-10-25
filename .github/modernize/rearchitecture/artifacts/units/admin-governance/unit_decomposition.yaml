@@ -1,0 +1,4 @@
+unit: admin-governance
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/admin.ts:19-213, drivers: [concern_split, lifecycle_split], rationale: "Dashboard analytics, store moderation and offer moderation have distinct permissions and reporting queries.", source_slice: {file: services/api/src/routes/admin.ts, lines: [19,213]}}

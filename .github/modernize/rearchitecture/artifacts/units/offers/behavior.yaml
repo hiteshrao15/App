@@ -1,0 +1,10 @@
+unit: offers
+side_effects:
+  - {source_loc: services/api/src/routes/offers.ts:126, effect: "Persist offer draft and audit creation; invalidate offer caches after review.", must_preserve: true}
+  - {source_loc: services/api/src/routes/offers.ts:189, effect: "Transition draft to pending_review and record submitted_at.", must_preserve: true}
+branches:
+  - {source_loc: services/api/src/routes/offers.ts:31, condition: "offer type fixed/percentage/custom", behavior: "require corresponding price, percent or terms field", must_preserve: true}
+  - {source_loc: services/api/src/routes/offers.ts:145, condition: "store not owned or not approved", behavior: "reject creation", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/offers.ts:36, trigger: "validUntil <= validFrom or invalid pricing", outcome: "structured validation error", contract: "400", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/offers.ts:126, scope: "offer insert and audit side effect", isolation: "database default", must_preserve: true}}

@@ -1,0 +1,32 @@
+modules:
+  - name: api-middleware
+    kind: config
+    source_loc: services/api/src/app.ts:35
+    used_by_units: [auth, user-profile, store-discovery, catalog, offers, redemption, engagement, search-config, admin-governance]
+    fields:
+      - {name: authenticate, type: "Express middleware"}
+      - {name: optionalAuth, type: "Express middleware"}
+      - {name: requireStoreOwner, type: "Express middleware"}
+      - {name: requireModerator, type: "Express middleware"}
+      - {name: requireAdmin, type: "Express middleware"}
+      - {name: requestId, type: "Express middleware"}
+      - {name: errorHandler, type: "Express error middleware"}
+    god_class: false
+    split_candidate: false
+    migration_strategy: wrap
+    notes: "Cross-cutting security/error wiring; preserve effects while mapping to Spring filters/interceptors."
+  - name: database-cache-services
+    kind: store
+    source_loc: services/api/src/db/pool.ts:1
+    used_by_units: [auth, store-discovery, catalog, offers, redemption, admin-governance]
+    fields:
+      - {name: getPool, type: "pg.Pool"}
+      - {name: withTransaction, type: "transaction wrapper"}
+      - {name: cacheGet, type: "Redis helper"}
+      - {name: cacheSet, type: "Redis helper"}
+      - {name: cacheDel, type: "Redis helper"}
+      - {name: checkRateLimit, type: "Redis rate-limit helper"}
+    god_class: true
+    split_candidate: true
+    migration_strategy: split
+    notes: "Database and cache concerns are shared and should remain behind explicit ports during rewrite."

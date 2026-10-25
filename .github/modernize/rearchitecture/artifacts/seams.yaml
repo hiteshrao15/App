@@ -1,0 +1,31 @@
+seams:
+  - id: services/api/src/app.ts:94
+    description: "Spring API cutover while Expo and admin clients remain contract consumers."
+    source: declared
+    cut_between: {migrated_side: auth, frozen_side: mobile-admin-clients}
+    protocol_shift: {from: "Express REST implementation", to: "Spring MVC REST"}
+    frozen_side_rule: "mobile-admin-clients MUST NOT be refactored to a new API shape during backend cutover; only base URL/config changes are allowed."
+    bridge_points:
+      - at: "API route boundary"
+        from_form: "Express /api/v1 JSON responses"
+        to_form: "Spring MVC /api/v1 JSON responses"
+        mapping_rule: "Keep path, HTTP method, JSON property names, status codes, bearer auth and pagination envelope identical; map Java DTO fields explicitly to existing camelCase names."
+        edge_cases: ["Preserve 401 vs 403 distinction.", "Preserve null/omitted optional fields as client currently expects."]
+        idempotency_retry: "GETs remain safe; OTP/redemption writes use existing server-side idempotency/atomic transaction rules."
+        fallback: "If Spring endpoint is unavailable, do not silently route writes to a second implementation; return 503 and retain legacy rollback path."
+        must_preserve: true
+  - id: services/api/src/db/migrations/001_initial_schema.sql:1
+    description: "Fresh PostgreSQL schema replaces legacy migration while clients and seeded domain data are validated."
+    source: inferred
+    cut_between: {migrated_side: catalog, frozen_side: infra-postgres-redis}
+    protocol_shift: null
+    frozen_side_rule: "PostgreSQL/Redis local service contracts MUST NOT be changed until schema and cache compatibility probes pass."
+    bridge_points:
+      - at: "JDBC/Redis adapter"
+        from_form: "pg UUID/enum/JSONB/paise rows and Redis keys"
+        to_form: "Spring Data/JDBC mappings and RedisTemplate key/value mappings"
+        mapping_rule: "Map UUIDs to java.util.UUID, PostgreSQL enum text to named enums, JSONB to explicit JSON nodes/maps, integer paise to long, and retain existing Redis key prefixes/TTLs."
+        edge_cases: ["Do not convert paise to floating point.", "Preserve timezone-aware timestamps.", "Preserve token hash uniqueness and row locks."]
+        idempotency_retry: "Transaction retries are allowed only for read conflicts; redemption writes must use row locking and no duplicate token issuance."
+        fallback: "Schema mismatch blocks cutover; keep legacy runtime available for rollback."
+        must_preserve: true

@@ -97,8 +97,28 @@ REDIS_URL=redis://localhost:6379
 JWT_SECRET=super_secret_bottlebazaar_jwt_signing_key_2026
 JWT_REFRESH_SECRET=super_secret_refresh_key_bottlebazaar_2026
 DEV_MOCK_OTP=true
+# Required only when DEV_MOCK_OTP=false
+MSG91_AUTH_KEY=
+MSG91_TEMPLATE_ID=
 UPLOAD_DIR=uploads
 ```
+
+### MSG91 OTP setup
+
+1. Create a MSG91 account and open the OTP service.
+2. Create an OTP template containing the MSG91 OTP placeholder (`##OTP##`),
+   then submit it for approval under your applicable Indian messaging/compliance
+   registration.
+3. Copy the approved template ID from MSG91 into `MSG91_TEMPLATE_ID`.
+4. Copy the account auth key into `MSG91_AUTH_KEY`.
+5. Keep `DEV_MOCK_OTP=true` for local development. Set it to `false` only after
+   the approved template and credentials are configured in the API environment.
+6. Restart or redeploy the API and test the mobile login flow.
+
+The API sends the generated OTP through MSG91's server-side endpoint
+`https://api.msg91.com/api/v5/otp`. The auth key is never sent to the mobile
+application. The backend continues to verify the OTP against its own database,
+so the existing authentication and rate limits remain in force.
 
 ### Render API build settings
 

@@ -1,41 +1,38 @@
-// =====================================================
-// SMS Service — Real Twilio integration with dev mode
-// =====================================================
+// SMS Service — MSG91 integration with an explicit development bypass
 import { logger } from '../utils/logger';
 
+export function isMockOtpEnabled(): boolean {
+  return process.env.DEV_MOCK_OTP === 'true';
+}
+
 export async function sendOtp(phone: string, otp: string): Promise<void> {
-  const isDev = process.env.NODE_ENV !== 'production';
+  const authKey = process.env.MSG91_AUTH_KEY;
+  const templateId = process.env.MSG91_TEMPLATE_ID;
 
-  if (isDev) {
-    // Development: log only, never send real SMS
-    logger.info({ env: 'development' }, `[DEV] OTP for [REDACTED]: [REDACTED]`);
-    return;
-  }
-
-  // Production: use Twilio
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = process.env.TWILIO_FROM_NUMBER;
-
-  if (!accountSid || !authToken || !fromNumber) {
-    logger.error('Twilio credentials not configured — OTP not sent');
+  if (!authKey || !templateId) {
+    logger.error('MSG91 credentials not configured — OTP not sent');
     throw new Error('SMS provider not configured. Contact support.');
   }
 
   try {
-    // Dynamic import to avoid loading Twilio in development
-    const twilio = await import('twilio');
-    const client = twilio.default(accountSid, authToken);
-
-    await client.messages.create({
-      body: `Your BottleBazaar verification code is: ${otp}. Valid for 10 minutes. Do not share this with anyone.`,
-      from: fromNumber,
-      to: phone,
+    const response = await fetch('https://api.msg91.com/api/v5/otp', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        authkey: authKey,
+        template_id: templateId,
+        mobile: phone.replace(/^\+/, ''),
+        otp,
+      }),
     });
-
-    logger.info('OTP SMS sent successfully');
+    const result = await response.json().catch(() => ({})) as { type?: string; message?: string };
+    if (!response.ok || (result.type && result.type.toLowerCase() !== 'success')) {
+      logger.error({ status: response.status, providerMessage: result.message }, 'MSG91 rejected OTP request');
+      throw new Error('MSG91 rejected OTP request');
+    }
+    logger.info('OTP SMS sent successfully via MSG91');
   } catch (err) {
-    logger.error({ err }, 'Failed to send OTP via Twilio');
+    logger.error({ err }, 'Failed to send OTP via MSG91');
     throw new Error('Failed to send OTP. Please try again.');
   }
 }

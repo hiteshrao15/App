@@ -6,7 +6,7 @@ import { useLocation } from '../context/LocationContext';
 
 export const AgeGateModal: React.FC = () => {
   const { isAgeVerified, confirmAge } = useAuth();
-  const { location, setLocation, availableCities } = useLocation();
+  const { location } = useLocation();
 
   const currentYear = 2026;
   const [selectedYear, setSelectedYear] = useState<number>(2000);
@@ -40,25 +40,11 @@ export const AgeGateModal: React.FC = () => {
 
           {/* Location Selector */}
           <View style={styles.section}>
-            <Text style={styles.label}>Select Your Current State & City:</Text>
+            <Text style={styles.label}>Launch location:</Text>
             <View style={styles.chipsRow}>
-              {availableCities.map((c) => {
-                const isSelected = location.city === c.city;
-                return (
-                  <TouchableOpacity
-                    key={c.city}
-                    style={[styles.chip, isSelected && styles.activeChip]}
-                    onPress={() => {
-                      setLocation(c.city, c.state);
-                      setUnderageError(false);
-                    }}
-                  >
-                    <Text style={[styles.chipText, isSelected && styles.activeChipText]}>
-                      {c.city} ({c.state})
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              <View style={[styles.chip, styles.activeChip]}>
+                <Text style={[styles.chipText, styles.activeChipText]}>Sohna, Gurugram</Text>
+              </View>
             </View>
           </View>
 

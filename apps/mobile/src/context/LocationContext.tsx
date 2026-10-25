@@ -8,6 +8,7 @@ export interface LocationState {
   city: string;
   state: string;
   minLegalAge: number;
+  selected: boolean;
 }
 
 const STATE_AGE_RULES: Record<string, number> = {
@@ -23,26 +24,26 @@ const STATE_AGE_RULES: Record<string, number> = {
 
 interface LocationContextType {
   location: LocationState;
-  setLocation: (city: string, state: string) => Promise<void>;
-  availableCities: Array<{ city: string; state: string }>;
+  selectLocation: (city: string, state: string) => Promise<void>;
+  availableLocations: Array<{ city: string; state: string; available: boolean }>;
+  isLocationSelected: boolean;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
 
 export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [location, setLocationState] = useState<LocationState>({
-    city: 'Mumbai',
-    state: 'Maharashtra',
+    city: 'Sohna',
+    state: 'Haryana',
     minLegalAge: 25,
+    selected: false,
   });
 
-  const availableCities = [
-    { city: 'Mumbai', state: 'Maharashtra' },
-    { city: 'Pune', state: 'Maharashtra' },
-    { city: 'Bengaluru', state: 'Karnataka' },
-    { city: 'New Delhi', state: 'Delhi' },
-    { city: 'Panaji', state: 'Goa' },
-    { city: 'Chennai', state: 'Tamil Nadu' },
+  const availableLocations = [
+    { city: 'Sohna', state: 'Haryana', available: true },
+    { city: 'Gurugram', state: 'Haryana', available: false },
+    { city: 'Manesar', state: 'Haryana', available: false },
+    { city: 'Faridabad', state: 'Haryana', available: false },
   ];
 
   useEffect(() => {
@@ -51,21 +52,27 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const saved = await AsyncStorage.getItem('@bottlebazaar_location');
         if (saved) {
           const parsed = JSON.parse(saved);
-          setLocationState(parsed);
+          if (parsed.city === 'Sohna' && parsed.state === 'Haryana') {
+            setLocationState({ city: 'Sohna', state: 'Haryana', minLegalAge: 25, selected: Boolean(parsed.selected || parsed.area) });
+          }
         }
-      } catch (e) {}
+      } catch {
+        // A missing or invalid saved location should keep the selection gate visible.
+      }
     })();
   }, []);
 
-  const setLocation = async (city: string, state: string) => {
-    const minLegalAge = STATE_AGE_RULES[state] || 21;
-    const newLoc = { city, state, minLegalAge };
+  const selectLocation = async (city: string, state: string) => {
+    if (city !== 'Sohna' || state !== 'Haryana') {
+      throw new Error('This location is coming soon.');
+    }
+    const newLoc = { city: 'Sohna', state: 'Haryana', minLegalAge: 25, selected: true };
     setLocationState(newLoc);
     await AsyncStorage.setItem('@bottlebazaar_location', JSON.stringify(newLoc));
   };
 
   return (
-    <LocationContext.Provider value={{ location, setLocation, availableCities }}>
+    <LocationContext.Provider value={{ location, selectLocation, availableLocations, isLocationSelected: location.selected }}>
       {children}
     </LocationContext.Provider>
   );

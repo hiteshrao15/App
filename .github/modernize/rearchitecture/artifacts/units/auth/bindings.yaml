@@ -1,0 +1,7 @@
+unit: auth
+bindings:
+  - {type: route-declaration, name: "router.post /request-otp", source_loc: services/api/src/routes/auth.ts:65, target: auth controller, must_appear_in_target: true, notes: "Public, strict rate limit."}
+  - {type: route-declaration, name: "router.post /verify-otp", source_loc: services/api/src/routes/auth.ts:137, target: auth controller, must_appear_in_target: true, notes: "Public, issues bearer session."}
+  - {type: filter, name: authLimiter, source_loc: services/api/src/routes/auth.ts:17, target: auth endpoints, must_appear_in_target: true, notes: "15-minute max 20."}
+runtime_config:
+  - {key: DEV_MOCK_OTP, source_loc: services/api/src/services/sms.ts:8, source: env, default_value: "false", must_appear_in_target: true, notes: "Controls real vs fixed OTP."}

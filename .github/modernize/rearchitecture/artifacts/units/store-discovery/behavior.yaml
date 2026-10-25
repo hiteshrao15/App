@@ -1,0 +1,9 @@
+unit: store-discovery
+side_effects:
+  - {source_loc: services/api/src/routes/stores.ts:111, effect: "Cache approved store detail and invalidate cache after owner/admin updates.", must_preserve: true}
+branches:
+  - {source_loc: services/api/src/routes/stores.ts:63, condition: "q/city/pinCode or lat/lng filters supplied", behavior: "filter approved stores and cap radius at 50km", must_preserve: true}
+  - {source_loc: services/api/src/routes/stores.ts:173, condition: "owner already has pending/approved store", behavior: "return 409 duplicate registration", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/stores.ts:203, trigger: "unsupported state/jurisdiction", outcome: "reject registration", contract: "400 validation error", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/stores.ts:173, scope: "store registration insert after duplicate check", isolation: "database default", must_preserve: true}}

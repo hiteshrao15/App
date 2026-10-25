@@ -1,0 +1,31 @@
+flows:
+  - name: bearer-session-user
+    medium: http-header
+    key: "Authorization: Bearer <JWT>"
+    writer: {unit: auth, source_loc: services/api/src/routes/auth.ts:218}
+    reader: {unit: user-profile, source_loc: services/api/src/routes/users.ts:20}
+    pairing: matched
+    must_preserve: true
+    must_confirm: null
+    verification_hint: "Login then call /users/me with returned token."
+    notes: "Same token is consumed by all authenticated units; session id is persisted."
+  - name: age-declaration
+    medium: database
+    key: users.age_declared
+    writer: {unit: user-profile, source_loc: services/api/src/routes/users.ts:66}
+    reader: {unit: redemption, source_loc: services/api/src/routes/redemptions.ts:63}
+    pairing: matched
+    must_preserve: true
+    must_confirm: null
+    verification_hint: "Issue redemption before/after declaration and assert 403/200."
+    notes: "Server-side gate, independent of client age modal."
+  - name: redis-rate-limit
+    medium: distributed-cache
+    key: "otp:phone, otp:verify, redeem:user, validate:store"
+    writer: {unit: auth, source_loc: services/api/src/routes/auth.ts:78}
+    reader: {unit: redemption, source_loc: services/api/src/routes/redemptions.ts:38}
+    pairing: dynamic-key
+    must_preserve: true
+    must_confirm: runtime
+    verification_hint: "Repeat calls until 429 and verify independent phone/store keys."
+    notes: "Keys are constructed dynamically and span route units."

@@ -1,0 +1,8 @@
+unit: user-profile
+side_effects:
+  - {source_loc: services/api/src/routes/users.ts:66, effect: "Persist immutable age declaration timestamp and user consent state.", must_preserve: true}
+branches:
+  - {source_loc: services/api/src/routes/users.ts:66, condition: "age declaration request", behavior: "set age_declared and timestamp; subsequent protected flows can proceed", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/users.ts:20, trigger: "missing/invalid authenticated session", outcome: "reject request", contract: "401", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/users.ts:66, scope: "age flag and timestamp update", isolation: "database default", must_preserve: true}}

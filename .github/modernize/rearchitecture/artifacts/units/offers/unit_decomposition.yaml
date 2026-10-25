@@ -1,0 +1,4 @@
+unit: offers
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/offers.ts:126-318, drivers: [lifecycle_split, concern_split], rationale: "Offer authoring, submission and moderation are separate lifecycle transitions with different roles.", source_slice: {file: services/api/src/routes/offers.ts, lines: [126,318]}}

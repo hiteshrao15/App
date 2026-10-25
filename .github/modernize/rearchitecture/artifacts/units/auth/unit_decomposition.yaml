@@ -1,0 +1,4 @@
+unit: auth
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/auth.ts:65-136, drivers: [concern_split], rationale: "OTP request rate limiting, persistence and SMS delivery can be separated from OTP verification and session issuance.", source_slice: {file: services/api/src/routes/auth.ts, lines: [65,136]}}

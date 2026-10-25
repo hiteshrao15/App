@@ -13,6 +13,9 @@
     "dev:api": "npm run dev --workspace=services/api",
     "dev:admin": "npm run dev --workspace=apps/admin",
     "dev:mobile": "npm run start --workspace=apps/mobile",
+    "dev:mobile:lan": "npm run start --workspace=apps/mobile -- --lan",
+    "dev:mobile:lan:clear": "npm run start --workspace=apps/mobile -- --lan --clear",
+    "dev:mobile:tunnel": "npm run start --workspace=apps/mobile -- --tunnel",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
@@ -28,5 +31,8 @@
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@msg91comm/sendotp-react-native": "^3.1.0"
   }
 }

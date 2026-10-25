@@ -1,0 +1,11 @@
+unit: redemption
+side_effects:
+  - {source_loc: services/api/src/routes/redemptions.ts:102, effect: "Insert hashed token, increment offer redemption_count and audit issuance.", must_preserve: true}
+  - {source_loc: services/api/src/routes/redemptions.ts:191, effect: "Mark token redeemed with cashier and redeemed_at; audit consume.", must_preserve: true}
+branches:
+  - {source_loc: services/api/src/routes/redemptions.ts:53, condition: "offer/store not approved, wrong store, outside validity", behavior: "reject issuance", must_preserve: true}
+  - {source_loc: services/api/src/routes/redemptions.ts:63, condition: "age_declared false", behavior: "403 AGE_GATE_REQUIRED", must_preserve: true}
+  - {source_loc: services/api/src/routes/redemptions.ts:177, condition: "token already redeemed/expired/cancelled or expired now", behavior: "reject replay/expiry and persist expired state", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/redemptions.ts:157, trigger: "unknown token or store mismatch", outcome: "invalid token error", contract: "400", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/redemptions.ts:74, scope: "offer lock, limit checks, token insert, counter increment; validation token lock and status update", isolation: "row-level FOR UPDATE", must_preserve: true}}

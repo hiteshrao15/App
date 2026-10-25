@@ -1,0 +1,77 @@
+units:
+  - name: auth
+    trigger: api
+    trigger_detail: "POST /api/v1/auth/request-otp, POST /api/v1/auth/verify-otp, POST /api/v1/auth/logout"
+    source_anchors:
+      - {path: services/api/src/routes/auth.ts, line: 65}
+    exported_signature:
+      - {method: "POST requestOtp(phone,countryCode) -> AuthResponse", source_loc: "services/api/src/routes/auth.ts:65", stability: frozen}
+      - {method: "POST verifyOtp(phone,otp) -> {token,user,expiresIn}", source_loc: "services/api/src/routes/auth.ts:137", stability: frozen}
+    dynamic_entrypoints: [{target: authRouter, mechanism: convention, source_loc: "services/api/src/app.ts:94"}]
+    depends_on: []
+    shared_refs:
+      - {module: api-middleware, used_fields: [authenticate, requestId, errorHandler]}
+  - name: user-profile
+    trigger: api
+    trigger_detail: "GET/PATCH/DELETE /api/v1/users/me; POST /me/declare-age"
+    source_anchors: [{path: services/api/src/routes/users.ts, line: 20}]
+    exported_signature: [{method: "POST declareAge() -> user", source_loc: "services/api/src/routes/users.ts:66", stability: must_preserve}]
+    dynamic_entrypoints: [{target: usersRouter, mechanism: convention, source_loc: "services/api/src/app.ts:95"}]
+    depends_on: [{unit: auth, via: "session bearer user id"}]
+    shared_refs: [{module: api-middleware, used_fields: [authenticate, errorHandler]}]
+  - name: store-discovery
+    trigger: api
+    trigger_detail: "GET /api/v1/stores, /stores/:id, /stores/:id/products; POST/PUT store management"
+    source_anchors: [{path: services/api/src/routes/stores.ts, line: 40}]
+    exported_signature: [{method: "GET listStores(filters,pagination) -> {data,pagination}", source_loc: "services/api/src/routes/stores.ts:40", stability: frozen}]
+    dynamic_entrypoints: [{target: storesRouter, mechanism: convention, source_loc: "services/api/src/app.ts:96"}]
+    depends_on: []
+    shared_refs: [{module: api-middleware, used_fields: [authenticate, optionalAuth, requireStoreOwner]}]
+  - name: catalog
+    trigger: api
+    trigger_detail: "GET /api/v1/products, /products/:id, /categories; admin product POST"
+    source_anchors: [{path: services/api/src/routes/products.ts, line: 27}, {path: services/api/src/routes/categories.ts, line: 10}]
+    exported_signature: [{method: "GET listProducts(filters,pagination) -> {data,pagination}", source_loc: "services/api/src/routes/products.ts:27", stability: frozen}]
+    dynamic_entrypoints: [{target: productsRouter, mechanism: convention, source_loc: "services/api/src/app.ts:97"}]
+    depends_on: []
+    shared_refs: [{module: api-middleware, used_fields: [optionalAuth, authenticate, requireAdmin]}]
+  - name: offers
+    trigger: api
+    trigger_detail: "GET/POST /api/v1/offers; submit/review; merchant mine"
+    source_anchors: [{path: services/api/src/routes/offers.ts, line: 48}]
+    exported_signature: [{method: "POST createOffer(offer) -> 201 {offer}", source_loc: "services/api/src/routes/offers.ts:126", stability: must_preserve}]
+    dynamic_entrypoints: [{target: offersRouter, mechanism: convention, source_loc: "services/api/src/app.ts:99"}]
+    depends_on: [{unit: store-discovery, via: "store ownership/status"}, {unit: catalog, via: "product id"}]
+    shared_refs: [{module: api-middleware, used_fields: [authenticate, optionalAuth, requireStoreOwner, requireModerator]}]
+  - name: redemption
+    trigger: api
+    trigger_detail: "POST /api/v1/redemptions/issue, /validate; GET /history"
+    source_anchors: [{path: services/api/src/routes/redemptions.ts, line: 27}]
+    exported_signature: [{method: "POST issue(offerId,storeId) -> {token,expiresIn,instructions}", source_loc: "services/api/src/routes/redemptions.ts:27", stability: frozen}, {method: "POST validate(token,storeId) -> redemption result", source_loc: "services/api/src/routes/redemptions.ts:139", stability: frozen}]
+    dynamic_entrypoints: [{target: redemptionsRouter, mechanism: convention, source_loc: "services/api/src/app.ts:100"}]
+    depends_on: [{unit: offers, via: "offer validity/limits"}, {unit: user-profile, via: "age_declared"}]
+    shared_refs: [{module: api-middleware, used_fields: [authenticate, requireStoreOwner]}]
+  - name: engagement
+    trigger: api
+    trigger_detail: "GET/POST/DELETE /api/v1/favorites; notifications read/read-all"
+    source_anchors: [{path: services/api/src/routes/favorites.ts, line: 21}, {path: services/api/src/routes/notifications.ts, line: 11}]
+    exported_signature: [{method: "GET notifications() -> notification list", source_loc: "services/api/src/routes/notifications.ts:11", stability: must_preserve}]
+    dynamic_entrypoints: [{target: "favoritesRouter, notificationsRouter", mechanism: convention, source_loc: "services/api/src/app.ts:101"}]
+    depends_on: [{unit: user-profile, via: "authenticated user"}]
+    shared_refs: [{module: api-middleware, used_fields: [authenticate, errorHandler]}]
+  - name: search-config
+    trigger: api
+    trigger_detail: "GET /api/v1/search, /suggestions, /config/public, /config/jurisdictions"
+    source_anchors: [{path: services/api/src/routes/search.ts, line: 19}, {path: services/api/src/routes/config.ts, line: 20}]
+    exported_signature: [{method: "GET search(q,filters) -> results", source_loc: "services/api/src/routes/search.ts:19", stability: must_preserve}]
+    dynamic_entrypoints: [{target: "searchRouter, configRouter", mechanism: convention, source_loc: "services/api/src/app.ts:103"}]
+    depends_on: []
+    shared_refs: [{module: api-middleware, used_fields: [errorHandler]}]
+  - name: admin-governance
+    trigger: api
+    trigger_detail: "GET/POST/PUT /api/v1/admin dashboard, stores, offers, users, audit, config"
+    source_anchors: [{path: services/api/src/routes/admin.ts, line: 19}]
+    exported_signature: [{method: "GET dashboard() -> metrics", source_loc: "services/api/src/routes/admin.ts:19", stability: frozen}]
+    dynamic_entrypoints: [{target: adminRouter, mechanism: convention, source_loc: "services/api/src/app.ts:106"}]
+    depends_on: [{unit: store-discovery, via: "store moderation"}, {unit: offers, via: "offer moderation"}]
+    shared_refs: [{module: api-middleware, used_fields: [authenticate, requireModerator, requireAdmin]}]

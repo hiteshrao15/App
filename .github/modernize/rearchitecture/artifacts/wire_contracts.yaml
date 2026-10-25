@@ -1,0 +1,49 @@
+contracts:
+  - name: auth-request-otp
+    unit: auth
+    type: rest
+    stability: frozen
+    source_loc: services/api/src/routes/auth.ts:65
+    contract: {method: "POST", path: "/api/v1/auth/request-otp", request: "{phone,countryCode?}", response: "{message,expiresIn}", error: "400 validation; 429 rate limit", auth: "public"}
+    target_contract: {method: "POST /api/v1/auth/request-otp -> AuthOtpResponse", notes: "Keep generic account-independent response and 600-second expiry."}
+    semantic_divergence: [{field: phone, issue: "Normalize +91/leading zero before persistence and rate limiting.", source_loc: services/api/src/routes/auth.ts:45}]
+  - name: auth-verify-otp
+    unit: auth
+    type: rest
+    stability: frozen
+    source_loc: services/api/src/routes/auth.ts:137
+    contract: {method: "POST", path: "/api/v1/auth/verify-otp", request: "{phone,otp}", response: "{token,user,expiresIn}", error: "401 invalid/expired; 403 suspended; 429 rate limit", auth: "public"}
+    target_contract: {method: "POST /api/v1/auth/verify-otp -> AuthSessionResponse", notes: "Bearer token and user role/displayName/language fields remain compatible."}
+    semantic_divergence: [{field: otp, issue: "Attempt count increments and locks record at five failed attempts.", source_loc: services/api/src/routes/auth.ts:172}]
+  - name: store-offer-discovery
+    unit: store-discovery
+    type: rest
+    stability: must_preserve
+    source_loc: services/api/src/routes/stores.ts:40
+    contract: {method: "GET", path: "/api/v1/stores and /api/v1/offers", request: "query filters/pagination", response: "{data,pagination}", error: "400 invalid query", auth: "optional bearer"}
+    target_contract: {method: "GET /api/v1/stores, /api/v1/offers -> PageResponse", notes: "Preserve page/limit and locality filters; enforce approved visibility."}
+    semantic_divergence: [{field: price_paise, issue: "Integer paise must not become floating currency.", source_loc: services/api/src/db/migrations/001_initial_schema.sql:218}]
+  - name: redemption-issue
+    unit: redemption
+    type: rest
+    stability: frozen
+    source_loc: services/api/src/routes/redemptions.ts:27
+    contract: {method: "POST", path: "/api/v1/redemptions/issue", request: "{offerId,storeId}", response: "{token,message,expiresIn,instructions}", error: "403 age gate; 400 unavailable/limit; 429", auth: "customer bearer"}
+    target_contract: {method: "POST /api/v1/redemptions/issue -> RedemptionTokenResponse", notes: "Single-use, 30-minute token and Hindi/English instructions."}
+    semantic_divergence: [{field: token, issue: "Only SHA-256 hash persists; raw token is returned once.", source_loc: services/api/src/routes/redemptions.ts:102}]
+  - name: redemption-validate
+    unit: redemption
+    type: rest
+    stability: frozen
+    source_loc: services/api/src/routes/redemptions.ts:139
+    contract: {method: "POST", path: "/api/v1/redemptions/validate", request: "{token,storeId}", response: "redeemed offer/discount result", error: "400 invalid/store mismatch/already redeemed/expired; 403 role", auth: "store_owner bearer"}
+    target_contract: {method: "POST /api/v1/redemptions/validate -> RedemptionValidationResponse", notes: "Lock token and atomically mark redeemed."}
+    semantic_divergence: [{field: status, issue: "Compare exact enum names; do not rely on ordinal values.", source_loc: services/api/src/db/migrations/001_initial_schema.sql:17}]
+  - name: admin-governance
+    unit: admin-governance
+    type: rest
+    stability: must_preserve
+    source_loc: services/api/src/routes/admin.ts:19
+    contract: {method: "GET/POST/PUT", path: "/api/v1/admin/*", request: "resource-specific JSON", response: "JSON resource/result", error: "401/403/404/400", auth: "moderator/admin bearer"}
+    target_contract: {method: "Spring MVC /api/v1/admin controllers", notes: "Preserve role separation, audit writes, moderation and config semantics."}
+    semantic_divergence: [{field: generatedAt, issue: "Serialize ISO-8601 timestamps with timezone.", source_loc: services/api/src/routes/admin.ts:61}]

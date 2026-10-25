@@ -1,0 +1,10 @@
+unit: admin-governance
+side_effects:
+  - {source_loc: services/api/src/routes/admin.ts:108, effect: "Approve/reject/suspend stores and write audit records; suspension cascades to active offers.", must_preserve: true}
+  - {source_loc: services/api/src/routes/admin.ts:360, effect: "Persist app_config changes with actor attribution.", must_preserve: true}
+branches:
+  - {source_loc: services/api/src/routes/admin.ts:122, condition: "moderator is store owner", behavior: "forbid self approval", must_preserve: true}
+  - {source_loc: services/api/src/routes/admin.ts:19, condition: "dashboard aggregation", behavior: "return store/offer/user/redemption metrics", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/admin.ts:284, trigger: "invalid user/store/offer id or insufficient role", outcome: "reject administrative action", contract: "403/404/400", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/admin.ts:176, scope: "store suspension and active-offer suspension should be atomic", isolation: "database default", must_preserve: true}}

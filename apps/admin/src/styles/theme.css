@@ -1,36 +1,36 @@
 /* =====================================================
    BottleBazaar Design System & Theme Variables
-   Aesthetic: Luxury Obsidian & Aged Amber / Brass
+   Aesthetic: BottleBazaar Evergreen & Warm Lime
    ===================================================== */
 :root {
-  --bg-primary: #0a0b0e;
-  --bg-secondary: #12141a;
-  --bg-card: rgba(22, 25, 34, 0.75);
-  --bg-card-hover: rgba(30, 34, 46, 0.9);
-  --bg-glass: rgba(18, 20, 26, 0.65);
-  --bg-input: #151821;
+  --bg-primary: #f6faf7;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card-hover: #eef7f0;
+  --bg-glass: rgba(255, 255, 255, 0.82);
+  --bg-input: #f3f8f4;
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-accent: rgba(212, 163, 89, 0.3);
-  --border-glow: rgba(235, 179, 85, 0.5);
+  --border-subtle: #dfeae2;
+  --border-accent: #b9dcc4;
+  --border-glow: #8fc39f;
 
-  --accent-gold: #d4a359;
-  --accent-amber: #e69138;
-  --accent-brass: #c59b27;
-  --accent-gradient: linear-gradient(135deg, #f5c065 0%, #d49339 50%, #996515 100%);
-  --accent-glow: 0 0 24px rgba(212, 163, 89, 0.25);
+  --accent-gold: #0c6b4d;
+  --accent-amber: #c98522;
+  --accent-brass: #a66a1b;
+  --accent-gradient: linear-gradient(135deg, #0c6b4d 0%, #075238 100%);
+  --accent-glow: 0 0 24px rgba(12, 107, 77, 0.18);
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-gold: #fcd34d;
+  --text-primary: #13231d;
+  --text-secondary: #426056;
+  --text-muted: #789087;
+  --text-gold: #a66a1b;
 
-  --success: #10b981;
-  --success-bg: rgba(16, 185, 129, 0.12);
-  --warning: #f59e0b;
-  --warning-bg: rgba(245, 158, 11, 0.12);
-  --danger: #ef4444;
-  --danger-bg: rgba(239, 68, 68, 0.12);
+  --success: #1c8a5a;
+  --success-bg: #e4f5ea;
+  --warning: #b47713;
+  --warning-bg: #fff5dd;
+  --danger: #c94747;
+  --danger-bg: #fdecec;
   --info: #3b82f6;
   --info-bg: rgba(59, 130, 246, 0.12);
 
@@ -39,9 +39,9 @@
   --radius-lg: 16px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 2px 8px rgba(19, 35, 29, 0.06);
+  --shadow-md: 0 8px 24px rgba(19, 35, 29, 0.08);
+  --shadow-lg: 0 16px 40px rgba(19, 35, 29, 0.12);
 
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;

@@ -1,0 +1,4 @@
+unit: catalog
+bindings:
+  - {type: route-declaration, name: "products/categories routers", source_loc: services/api/src/app.ts:97, target: catalog controllers, must_appear_in_target: true, notes: "Public reads, admin product write."}
+runtime_config: []

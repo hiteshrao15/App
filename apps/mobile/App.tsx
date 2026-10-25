@@ -1,145 +1,53 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
-import { colors } from './src/theme/colors';
-import { AuthProvider } from './src/context/AuthContext';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { LocationProvider } from './src/context/LocationContext';
-import { AgeGateModal } from './src/components/AgeGateModal';
-import { LoginModal } from './src/screens/LoginModal';
+import { colors } from './src/theme/colors';
+import { copy, Language, loadLanguage } from './src/i18n';
+import { WelcomeScreen } from './src/screens/WelcomeScreen';
+import { AuthFlowScreen } from './src/screens/AuthFlowScreen';
+import { AccountScreenNew, DiscoverScreenNew, FavoritesScreenNew, HomeScreenNew, OffersScreenNew } from './src/screens/NewCustomerScreens';
+import { DealItem, StoreItem } from './src/services/api';
 import { StoreDetailModal } from './src/screens/StoreDetailModal';
-import { HomeScreen } from './src/screens/HomeScreen';
-import { StoresScreen } from './src/screens/StoresScreen';
-import { DealsScreen } from './src/screens/DealsScreen';
 import { WalletScreen } from './src/screens/WalletScreen';
-import { ProfileScreen } from './src/screens/ProfileScreen';
-import { StoreItem, DealItem } from './src/services/api';
+import { LocationSelectionScreen } from './src/screens/LocationSelectionScreen';
+import { useLocation } from './src/context/LocationContext';
 
-type Tab = 'home' | 'stores' | 'deals' | 'wallet' | 'profile';
+type Entry = 'welcome' | 'login' | 'signup';
+type Tab = 'home' | 'discover' | 'offers' | 'favorites' | 'account' | 'wallet';
 
-const MainApp: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('home');
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+const MainApp = () => {
+  const auth = useAuth();
+  const locationContext = useLocation();
+  const [entry, setEntry] = useState<Entry | null>(null);
+  const [language, setLanguage] = useState<Language>('en');
+  const [tab, setTab] = useState<Tab>('home');
+  const [selectedDeal, setSelectedDeal] = useState<DealItem | null>(null);
   const [selectedStore, setSelectedStore] = useState<StoreItem | null>(null);
+  const [ready, setReady] = useState(false);
 
-  const tabs: Array<{ id: Tab; label: string; icon: string }> = [
-    { id: 'home', label: 'Discover', icon: '🍾' },
-    { id: 'stores', label: 'Stores', icon: '🏬' },
-    { id: 'deals', label: 'Deals', icon: '🏷️' },
-    { id: 'wallet', label: 'Wallet', icon: '🎟️' },
-    { id: 'profile', label: 'Profile', icon: '👤' },
-  ];
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.bgPrimary} />
-
-      {/* Screen View */}
-      <View style={styles.container}>
-        {activeTab === 'home' && (
-          <HomeScreen
-            onSelectDeal={(deal) => setActiveTab('deals')}
-            onSelectStore={(store) => setSelectedStore(store)}
-            onOpenWallet={() => setActiveTab('wallet')}
-            onPromptLogin={() => setIsLoginOpen(true)}
-          />
-        )}
-        {activeTab === 'stores' && (
-          <StoresScreen
-            onSelectStore={(store) => setSelectedStore(store)}
-          />
-        )}
-        {activeTab === 'deals' && (
-          <DealsScreen
-            onOpenWallet={() => setActiveTab('wallet')}
-            onPromptLogin={() => setIsLoginOpen(true)}
-          />
-        )}
-        {activeTab === 'wallet' && <WalletScreen />}
-        {activeTab === 'profile' && (
-          <ProfileScreen onPromptLogin={() => setIsLoginOpen(true)} />
-        )}
-      </View>
-
-      {/* Bottom Navigation Bar */}
-      <View style={styles.tabBar}>
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <TouchableOpacity
-              key={tab.id}
-              style={[styles.tabButton, isActive && styles.activeTabButton]}
-              onPress={() => setActiveTab(tab.id)}
-            >
-              <Text style={{ fontSize: 18 }}>{tab.icon}</Text>
-              <Text style={[styles.tabLabel, isActive && styles.activeTabLabel]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* Legal Drinking Age Gate Modal */}
-      <AgeGateModal />
-
-      {/* In-App Authentication Modal */}
-      <LoginModal visible={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-
-      {/* Store Detail Popup Modal */}
-      <StoreDetailModal
-        store={selectedStore}
-        onClose={() => setSelectedStore(null)}
-        onSelectDeal={(d) => {
-          setSelectedStore(null);
-          setActiveTab('deals');
-        }}
-      />
-    </SafeAreaView>
-  );
+  useEffect(() => { (async () => { const [seen, lang] = await Promise.all([AsyncStorage.getItem('@bottlebazaar_welcome_seen'), loadLanguage()]); setLanguage(lang); setEntry(seen === 'true' ? null : 'welcome'); setReady(true); })(); }, []);
+  const chooseLanguage = async () => { const next = language === 'en' ? 'hi' : 'en'; setLanguage(next); await AsyncStorage.setItem('@bottlebazaar_language', next); };
+  const begin = (next: Entry) => { setEntry(next); AsyncStorage.setItem('@bottlebazaar_welcome_seen', 'true'); };
+  const completeAuth = async () => { await auth.confirmAge(new Date().getFullYear() - 25); setEntry(null); setTab('home'); };
+  if (!ready) return <View style={styles.loading}><Text style={styles.loadingMark}>B</Text></View>;
+  if (!auth.isAuthenticated && entry === 'welcome') return <WelcomeScreen language={language} onLogin={() => begin('login')} onSignup={() => begin('signup')} onLanguage={chooseLanguage} />;
+  if (!auth.isAuthenticated && (entry === 'login' || entry === 'signup')) return <AuthFlowScreen mode={entry} language={language} requestOtp={auth.requestOtp} verifyOtp={auth.verifyOtp} updateProfile={auth.updateProfile} onComplete={completeAuth} onBack={() => setEntry('welcome')} />;
+  if (!auth.isAuthenticated) return <WelcomeScreen language={language} onLogin={() => begin('login')} onSignup={() => begin('signup')} onLanguage={chooseLanguage} />;
+  if (!locationContext.isLocationSelected) return <LocationSelectionScreen language={language} onContinue={() => setTab('home')} />;
+  const navigate = (next: string) => setTab(next as Tab);
+  return <SafeAreaView style={styles.safe}><StatusBar barStyle="dark-content" backgroundColor={colors.paper} /><View style={styles.content}>
+    {tab === 'home' && <HomeScreenNew language={language} onTab={navigate} onSelectDeal={setSelectedDeal} onSelectStore={setSelectedStore} />}
+    {tab === 'discover' && <DiscoverScreenNew language={language} onSelectStore={setSelectedStore} />}
+    {tab === 'offers' && <OffersScreenNew language={language} onSelectDeal={setSelectedDeal} />}
+    {tab === 'favorites' && <FavoritesScreenNew language={language} />}
+    {tab === 'account' && <AccountScreenNew language={language} onLanguage={chooseLanguage} onLogout={auth.logout} />}
+    {tab === 'wallet' && <WalletScreen />}
+  </View><View style={styles.nav}>{([['home', '⌂', copy[language].home], ['discover', '⌕', copy[language].discover], ['offers', '✦', copy[language].offers], ['favorites', '♡', copy[language].favorites], ['account', '○', copy[language].account]] as const).map(([id, icon, label]) => <TouchableOpacity key={id} accessibilityRole="button" accessibilityLabel={label} onPress={() => setTab(id)} style={styles.navItem}><Text style={[styles.navIcon, tab === id && styles.activeText]}>{icon}</Text><Text style={[styles.navLabel, tab === id && styles.activeText]}>{label}</Text></TouchableOpacity>)}</View>
+    <StoreDetailModal store={selectedStore} onClose={() => setSelectedStore(null)} onSelectDeal={(deal) => { setSelectedStore(null); setSelectedDeal(deal); setTab('offers'); }} />
+  </SafeAreaView>;
 };
 
-export default function App() {
-  return (
-    <AuthProvider>
-      <LocationProvider>
-        <MainApp />
-      </LocationProvider>
-    </AuthProvider>
-  );
-}
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bgPrimary,
-  },
-  container: {
-    flex: 1,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: colors.bgSecondary,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderSubtle,
-    paddingVertical: 8,
-    paddingBottom: 12,
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-  },
-  activeTabButton: {
-    transform: [{ scale: 1.05 }],
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  activeTabLabel: {
-    color: colors.accentGold,
-    fontWeight: '800',
-  },
-});
+export default function App() { return <AuthProvider><LocationProvider><MainApp /></LocationProvider></AuthProvider>; }
+const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: colors.paper }, content: { flex: 1 }, loading: { flex: 1, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' }, loadingMark: { color: colors.lime, fontSize: 100, fontWeight: '900' }, nav: { height: 74, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line, flexDirection: 'row', paddingBottom: 8 }, navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3 }, navIcon: { color: colors.muted, fontSize: 24, lineHeight: 25 }, navLabel: { color: colors.muted, fontSize: 10, fontWeight: '800' }, activeText: { color: colors.brand } });

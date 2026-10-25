@@ -1,0 +1,11 @@
+unit: auth
+side_effects:
+  - {source_loc: services/api/src/routes/auth.ts:85, effect: "Invalidate active OTP records for phone, hash and persist new OTP, then send SMS.", must_preserve: true}
+  - {source_loc: services/api/src/routes/auth.ts:211, effect: "Persist session token hash and audit auth.login.", must_preserve: true}
+branches:
+  - {source_loc: services/api/src/routes/auth.ts:78, condition: "phone or IP OTP rate limit exceeded", behavior: "return 429 generic rate-limit error", must_preserve: true}
+  - {source_loc: services/api/src/routes/auth.ts:183, condition: "OTP invalid, expired, or attempts >= 5", behavior: "return generic 401 and consume record at five attempts", must_preserve: true}
+  - {source_loc: services/api/src/routes/auth.ts:205, condition: "user status is not active", behavior: "return 403 ACCOUNT_SUSPENDED", must_preserve: true}
+error_paths:
+  - {source_loc: services/api/src/routes/auth.ts:33, trigger: "invalid phone/OTP payload", outcome: "validation error", contract: "400 structured error", must_preserve: true}
+concurrency: {model: async, tx_boundary: {source_loc: services/api/src/routes/auth.ts:190, scope: "user insert/upsert is atomic; session insert follows", isolation: "database default", must_preserve: true}}

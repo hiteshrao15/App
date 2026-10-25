@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.0-blue.svg)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7.0-red.svg)](https://redis.io/)
-[![React Native / Expo](https://img.shields.io/badge/React%20Native-Expo%2051-black.svg)](https://expo.dev/)
+[![React Native / Expo](https://img.shields.io/badge/React%20Native-Expo%2057-black.svg)](https://expo.dev/)
 [![License: FSSAI / State Excise](https://img.shields.io/badge/Compliance-Indian%20State%20Excise-amber.svg)](#legal--regulatory-compliance)
 
 **BottleBazaar** is a production-oriented cross-platform liquor discovery, store locator, and verified in-store discount coupon marketplace designed specifically for the legal and regulatory framework of India.
@@ -93,6 +93,31 @@ npm run dev:mobile
 ```
 *Press `w` in terminal to run in web browser, or scan the QR code with the Expo Go app on your iOS/Android phone.*
 
+For a physical phone, use an explicit LAN connection:
+```bash
+npm run dev:mobile:lan
+```
+Install **Expo Go** on the phone, connect the phone and computer to the same Wi-Fi network,
+then scan the QR code. If the QR code cannot be reached on the local network, use:
+```bash
+npm run dev:mobile:tunnel
+```
+The tunnel is slower but does not require both devices to be on the same network.
+If the app opens but says it cannot connect to the server, close Expo Go and restart
+with a clean bundle:
+```bash
+npm run dev:mobile:lan:clear
+```
+Then scan the new QR code. You can also open
+`https://app-jod2.onrender.com/health` in the phone's browser; it should show
+`{"status":"ok",...}`.
+
+If you are running the API locally instead of using the deployed API in
+`apps/mobile/.env`, set `EXPO_PUBLIC_API_URL` to the computer's Wi-Fi IPv4 address,
+for example `http://192.168.1.6:3000/api/v1`. Do not use `localhost` from a
+physical phone; that points to the phone itself. Allow Node.js through Windows
+Firewall when prompted.
+
 ---
 
 ## 🎟️ Testing In-Store Coupon Redemption Flow
@@ -113,6 +138,33 @@ npm run dev:mobile
 # Run unit & integration test suites
 npm run test
 ```
+
+The API tests require PostgreSQL and Redis:
+```bash
+npm run infra:up
+npm run db:migrate
+npm run test --workspace=services/api
+```
+If PostgreSQL reports an authentication error or port `5432` is already in use,
+stop the other PostgreSQL/Docker Compose stack using that port before running
+`npm run infra:up`. Do not use `infra:reset` unless deleting the local database
+volume is intended.
+
+### Configure real SMS OTP with MSG91
+
+For free local testing, keep `DEV_MOCK_OTP=true` and use `123456`. For real
+SMS delivery, create and approve an OTP template in MSG91, then configure
+these API-only environment variables:
+
+```ini
+DEV_MOCK_OTP=false
+MSG91_AUTH_KEY=your-msg91-auth-key
+MSG91_TEMPLATE_ID=your-approved-template-id
+```
+
+Never put `MSG91_AUTH_KEY` in the mobile app or commit it to git. Restart the
+API after setting the variables. The backend sends OTPs through MSG91 and
+continues to verify them using the existing database flow.
 
 ---
 

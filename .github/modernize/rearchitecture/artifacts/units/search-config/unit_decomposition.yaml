@@ -1,0 +1,4 @@
+unit: search-config
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/search.ts:19-120, drivers: [concern_split], rationale: "Search indexing/query behavior and public operational configuration have unrelated change cadence.", source_slice: {file: services/api/src/routes/search.ts, lines: [19,120]}}

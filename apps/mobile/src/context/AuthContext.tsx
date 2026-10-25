@@ -22,6 +22,7 @@ interface AuthContextType {
   requestOtp: (phone: string) => Promise<boolean>;
   verifyOtp: (phone: string, otp: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  updateProfile: (name: string, language: 'en' | 'hi') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -109,6 +110,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.multiRemove(['@bottlebazaar_user', '@bottlebazaar_age_declared', '@bottlebazaar_birth_year']);
   };
 
+  const updateProfile = async (name: string, language: 'en' | 'hi') => {
+    await mobileApi.updateProfile(name, language);
+    setUser((current) => current ? { ...current, name } : current);
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -118,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       requestOtp,
       verifyOtp,
       logout,
+      updateProfile,
     }}>
       {children}
     </AuthContext.Provider>

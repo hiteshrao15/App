@@ -3,16 +3,32 @@ import { Lock, Smartphone, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Login: React.FC = () => {
-  const { login } = useAuth();
-  const [identifier, setIdentifier] = useState('admin@bottlebazaar.in');
-  const [otpOrPassword, setOtpOrPassword] = useState('123456');
+  const { requestOtp, login } = useAuth();
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpRequested, setOtpRequested] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await login(identifier, otpOrPassword);
-    setLoading(false);
+    setError('');
+    setMessage('');
+    try {
+      if (!otpRequested) {
+        await requestOtp(phone);
+        setOtpRequested(true);
+        setMessage('OTP sent. Enter the code to continue.');
+      } else {
+        await login(phone, otp);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Authentication failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,36 +66,40 @@ export const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Phone Number or Admin Email</label>
+            <label className="form-label">Registered phone number</label>
             <input 
               type="text" 
               className="input" 
               required
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="e.g. +91 98200 12345 or admin@..."
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="e.g. +91 98200 12345"
+              disabled={otpRequested}
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Password / OTP (Dev default: 123456)</label>
+            <label className="form-label">One-time password</label>
             <input 
-              type="password" 
+              type="text" 
               className="input" 
-              required
-              value={otpOrPassword}
-              onChange={(e) => setOtpOrPassword(e.target.value)}
-              placeholder="Enter OTP or Password"
+              required={otpRequested}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder={otpRequested ? 'Enter 6-digit OTP' : 'Request an OTP first'}
+              disabled={!otpRequested}
             />
           </div>
 
+          {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{error}</p>}
+          {message && <p role="status" style={{ color: 'var(--success)', fontSize: '0.85rem' }}>{message}</p>}
           <button 
             type="submit" 
             className="btn btn-primary" 
             style={{ width: '100%', marginTop: '1rem', padding: '0.85rem' }}
             disabled={loading}
           >
-            <span>{loading ? 'Authenticating...' : 'Access Merchant Portal'}</span>
+            <span>{loading ? 'Authenticating...' : otpRequested ? 'Access Merchant Portal' : 'Send OTP'}</span>
             <ArrowRight size={16} />
           </button>
         </form>

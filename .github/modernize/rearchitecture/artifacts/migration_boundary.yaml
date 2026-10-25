@@ -1,0 +1,28 @@
+user_intent:
+  raw_request: "Modernize end-to-end BottleBazaar; Java/Spring Boot backend; Expo iOS/Android/web; preserve compatible code and behavior."
+  inferred_acceptance: ["Spring Boot backend serves compatible /api/v1 contracts", "mobile/admin clients continue to function", "Sohna/Gurugram compliance and merchant/admin workflows are runtime reachable"]
+  cleanup_required: false
+strategy: phased
+runtime_reachable:
+  - services/api/src/app.ts
+  - services/api/src/index.ts
+  - apps/mobile/src/services/api.ts
+  - apps/admin/src/services/api.ts
+must_rewrite:
+  - {path: "services/api/src/routes/*.ts", reason: "API runtime boundary must be implemented by Spring controllers/services"}
+  - {path: "services/api/src/db/migrations/001_initial_schema.sql", reason: "fresh schema requested; preserve compatible contract while adding target scope"}
+  - {path: "services/api/src/cache/redis.ts", reason: "rate-limit/cache semantics are runtime dependencies"}
+  - {path: "services/api/src/middleware/*.ts", reason: "auth, security and error contracts are API boundary behavior"}
+  - {path: "apps/mobile/src/services/api.ts", reason: "client must target compatible Spring API and new location scope"}
+  - {path: "apps/admin/src/services/api.ts", reason: "admin/merchant client must target compatible Spring API"}
+copy_as_is:
+  - {path: "packages/types/src/index.ts", reason: "shared wire types can be retained until target DTO parity is verified"}
+  - {path: "docs", reason: "reference documentation is not runtime code"}
+legacy_allowed_to_remain:
+  - {path: "services/api/src", reason: "legacy Express source may remain during phased cutover but must not be deployed as the target runtime"}
+  - {path: "infra", reason: "existing local PostgreSQL/Redis support remains useful during transition"}
+defer_cleanup:
+  - "Delete Express implementation only after Spring contract probes and mobile/admin smoke tests pass."
+  - "Remove unsupported-city seed rows after Sohna/Gurugram cutover is verified."
+full_rewrite_reason: null
+implementation_rule: "Implementation scope follows must_rewrite; source anchors prove behavior and are not themselves rewrite targets."

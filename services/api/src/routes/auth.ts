@@ -11,7 +11,7 @@ import { getRedis, checkRateLimit } from '../cache/redis';
 import { signToken, authenticate } from '../middleware/auth';
 import { ValidationError, AppError, UnauthorizedError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
-import { sendOtp } from '../services/sms';
+import { isMockOtpEnabled, sendOtp } from '../services/sms';
 import { auditLog } from '../services/audit';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -90,9 +90,9 @@ router.post('/request-otp', authLimiter, async (req: Request, res: Response, nex
     );
 
     // Generate 6-digit OTP
-    const isDev = process.env.NODE_ENV !== 'production';
+    const useMockOtp = isMockOtpEnabled();
     // In development: use fixed OTP 123456 for easy testing
-    const otp = isDev ? '123456' : crypto.randomInt(100000, 999999).toString();
+    const otp = useMockOtp ? '123456' : crypto.randomInt(100000, 999999).toString();
     const codeHash = await bcrypt.hash(otp, 10);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
@@ -102,10 +102,10 @@ router.post('/request-otp', authLimiter, async (req: Request, res: Response, nex
     );
 
     // Send OTP via SMS (real provider in production)
-    if (!isDev) {
-      await sendOtp(phone, otp);
+    if (useMockOtp) {
+      logger.info({ env: process.env.NODE_ENV }, 'Development OTP enabled: use 123456');
     } else {
-      logger.info({ env: 'development' }, 'Development OTP: 123456 (never in production)');
+      await sendOtp(phone, otp);
     }
 
     await auditLog({
@@ -117,7 +117,7 @@ router.post('/request-otp', authLimiter, async (req: Request, res: Response, nex
 
     // Generic response — do not reveal if account exists
     res.json({
-      message: isDev
+      message: useMockOtp
         ? 'OTP sent (development mode: use 123456)'
         : 'OTP sent to your phone number',
       expiresIn: 600, // seconds

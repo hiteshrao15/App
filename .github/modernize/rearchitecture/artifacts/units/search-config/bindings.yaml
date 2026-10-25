@@ -1,0 +1,4 @@
+unit: search-config
+bindings:
+  - {type: route-declaration, name: "search/config routers", source_loc: services/api/src/app.ts:103-104, target: discovery/config controllers, must_appear_in_target: true, notes: "Public endpoints."}
+runtime_config: []

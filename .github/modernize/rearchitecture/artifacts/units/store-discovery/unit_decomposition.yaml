@@ -1,0 +1,4 @@
+unit: store-discovery
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/stores.ts:40-170, drivers: [concern_split, data_ownership_split], rationale: "Public geo discovery and owner registration/update have separate read models, authorization and cache behavior.", source_slice: {file: services/api/src/routes/stores.ts, lines: [40,170]}}

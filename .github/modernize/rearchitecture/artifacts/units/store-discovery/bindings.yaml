@@ -1,0 +1,6 @@
+unit: store-discovery
+bindings:
+  - {type: route-declaration, name: "stores router", source_loc: services/api/src/app.ts:96, target: store controller, must_appear_in_target: true, notes: "Public discovery plus authenticated owner management."}
+  - {type: convention, name: "optionalAuth", source_loc: services/api/src/routes/stores.ts:40, target: public store endpoints, must_appear_in_target: true, notes: "Bearer is optional for discovery."}
+runtime_config:
+  - {key: DATABASE_URL, source_loc: services/api/src/db/pool.ts:8, source: env, default_value: "", must_appear_in_target: true, notes: "PostgreSQL connection."}

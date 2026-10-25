@@ -13,7 +13,8 @@ interface AdminUser {
 interface AuthContextType {
   user: AdminUser | null;
   isAuthenticated: boolean;
-  login: (phoneOrEmail: string, passOrOtp: string) => Promise<boolean>;
+  requestOtp: (phone: string) => Promise<void>;
+  login: (phone: string, otp: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -27,28 +28,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return JSON.parse(saved);
       } catch (e) {}
     }
-    // Default logged-in admin user for frictionless dev preview
-    return {
-      id: 'usr-admin-1',
-      name: 'Aditya Singhania',
-      email: 'admin@bottlebazaar.in',
-      role: 'ADMIN',
-      storeName: 'BottleBazaar Headquarters (Mumbai)',
-    };
+    return null;
   });
 
-  const login = async (phoneOrEmail: string, passOrOtp: string): Promise<boolean> => {
-    // Development authentication
-    const mockUser: AdminUser = {
-      id: `usr-${Date.now()}`,
-      name: phoneOrEmail.includes('@') ? phoneOrEmail.split('@')[0] : 'Store Manager',
-      email: phoneOrEmail.includes('@') ? phoneOrEmail : `${phoneOrEmail}@merchant.bottlebazaar.in`,
-      role: phoneOrEmail.toLowerCase().includes('admin') ? 'ADMIN' : 'STORE_OWNER',
-      storeName: 'Living Liquidz — Bandra West',
+  const requestOtp = async (phone: string): Promise<void> => {
+    const response = await fetch('/api/v1/auth/request-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone.replace(/\s+/g, ''), countryCode: '+91' }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error || 'Could not send OTP.');
+  };
+
+  const login = async (phone: string, otp: string): Promise<boolean> => {
+    const response = await fetch('/api/v1/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone.replace(/\s+/g, ''), otp }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error || 'Invalid or expired OTP.');
+
+    const role = body.user?.role;
+    if (!['admin', 'super_admin', 'moderator', 'store_owner'].includes(role)) {
+      throw new Error('This account is not authorized for the merchant portal.');
+    }
+
+    const authenticatedUser: AdminUser = {
+      id: String(body.user.id),
+      name: body.user.displayName || phone,
+      email: '',
+      role: role === 'store_owner' ? 'STORE_OWNER' : 'ADMIN',
     };
-    adminApi.setAuthToken(`mock-jwt-token-${Date.now()}`);
-    setUser(mockUser);
-    localStorage.setItem('bb_admin_user', JSON.stringify(mockUser));
+    adminApi.setAuthToken(String(body.token));
+    setUser(authenticatedUser);
+    localStorage.setItem('bb_admin_user', JSON.stringify(authenticatedUser));
     return true;
   };
 
@@ -59,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, requestOtp, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

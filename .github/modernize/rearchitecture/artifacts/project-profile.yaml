@@ -1,0 +1,47 @@
+﻿project:
+  scope_path: "."
+  loc: 9600
+  languages: [TypeScript, JavaScript]
+  git: true
+  structure:
+    apps: "Expo mobile and React/Vite admin applications"
+    services: "Express/PostgreSQL/Redis API services"
+    packages: "Shared TypeScript packages"
+    infra: "Deployment and infrastructure configuration"
+  notes: "BottleBazaar liquor discovery, catalogue, reservation, and QR redemption monorepo."
+assessment:
+  change_type: rewrite
+  rationale: |
+    User requests an end-to-end modernization with a backend migration to Java/Spring Boot while preserving compatible behavior and completing mobile, admin, merchant, customer, and compliance workflows.
+  transformations:
+    - fromStack: "Express/PostgreSQL/Redis"
+      fromStackVersion: "Current repository versions"
+      toStack: "Spring Boot/PostgreSQL/Redis"
+      toStackVersion: "User-requested Java/Spring Boot target"
+    - fromStack: "Expo mobile and React/Vite admin"
+      fromStackVersion: "Current repository versions"
+      toStack: "Expo iOS/Android/web and React/Vite admin with MUI"
+      toStackVersion: "User-requested targets"
+  grouping_needed: false
+  deep_planning: undecided
+progress_sync:
+  run_id: 340e1acc-6bba-4c26-9767-e71442d8366d
+  grouping_mode: none
+  execution_mode: all-at-once
+  plan_start_time: 2026-10-25T05:54:31.4673510Z
+  plan_completed_time: null
+  execution_start_time: null
+  execution_completed_time: null
+  validation_start_time: null
+  validation_completed_time: null
+  total_phases: 4
+  completed_phases: 1
+  total_modules: 9
+  completed_modules: 9
+  total_tasks: 9
+  completed_tasks: 3
+  total_commits: 1
+  build_verified: false
+  test_verified: false
+
+

@@ -2,7 +2,7 @@
 // Admin API Client with Real Backend & Safe Fallbacks
 // =====================================================
 
-const API_BASE = '/api';
+const API_BASE = '/api/v1';
 
 export interface StoreData {
   id: string;

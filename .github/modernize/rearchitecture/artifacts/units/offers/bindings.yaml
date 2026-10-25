@@ -1,0 +1,5 @@
+unit: offers
+bindings:
+  - {type: route-declaration, name: "offers router", source_loc: services/api/src/app.ts:99, target: offer controller, must_appear_in_target: true, notes: "Public reads; owner create/submit; moderator review."}
+  - {type: filter, name: "requireStoreOwner/requireModerator", source_loc: services/api/src/routes/offers.ts:126, target: offer endpoints, must_appear_in_target: true, notes: "Role gates."}
+runtime_config: []

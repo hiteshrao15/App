@@ -1,0 +1,4 @@
+unit: catalog
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/products.ts:27-130, drivers: [data_ownership_split], rationale: "Product master data and category taxonomy evolve independently and can expose separate target services.", source_slice: {file: services/api/src/routes/products.ts, lines: [27,130]}}

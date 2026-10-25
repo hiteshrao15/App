@@ -1,0 +1,4 @@
+unit: engagement
+commit: false
+candidate_splits:
+  - {id: services/api/src/routes/favorites.ts:21-66, drivers: [concern_split], rationale: "Favorites and notification inbox have independent persistence and client refresh lifecycles.", source_slice: {file: services/api/src/routes/favorites.ts, lines: [21,66]}}

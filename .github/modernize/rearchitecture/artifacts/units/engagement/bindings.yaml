@@ -1,0 +1,4 @@
+unit: engagement
+bindings:
+  - {type: route-declaration, name: "favorites and notifications routers", source_loc: services/api/src/app.ts:101, target: engagement controllers, must_appear_in_target: true, notes: "Authenticated user-scoped APIs."}
+runtime_config: []
