@@ -12,6 +12,10 @@ This index is not the full contract. Do not implement from this file alone; foll
 - `project-profile.yaml` — monorepo module structure and Express/PostgreSQL/Redis to Spring target → `project-structure.md`, `tech-stack.md`, `unit_graph.yaml`.
 
 ## Global artifacts
+- `t4-architect.md` — target Spring Boot module boundaries, client/runtime shape,
+  compatibility contracts, security/compliance policy, migration/rollback, and
+  critical-flow design. Read this alongside the structured YAML artifacts; it is
+  not a replacement for per-unit behavior/bindings.
 - `unit_graph.yaml` — unit triggers, source anchors, dependencies and exported signatures. Filter by assigned `name`; source anchors are evidence, not rewrite scope.
 - `migration_boundary.yaml` — implementation scope. Use `must_rewrite`; do not infer scope from every source anchor.
 - `wire_contracts.yaml` — REST request/response/auth/error contracts. Filter `unit`; preserve `frozen` rows exactly.
