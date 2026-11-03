@@ -64,8 +64,44 @@ function normalizePhone(phone: string, countryCode: string): string {
   return `${countryCode}${clean}`;
 }
 
+let passwordAuthSchemaReady: Promise<void> | undefined;
+
+function ensurePasswordAuthSchema(): Promise<void> {
+  if (!passwordAuthSchemaReady) {
+    passwordAuthSchemaReady = (async () => {
+      const pool = getPool();
+      await pool.query(`
+        ALTER TABLE users
+          ALTER COLUMN phone DROP NOT NULL;
+        ALTER TABLE users
+          ADD COLUMN IF NOT EXISTS email VARCHAR(200),
+          ADD COLUMN IF NOT EXISTS username VARCHAR(80),
+          ADD COLUMN IF NOT EXISTS address_line1 VARCHAR(300),
+          ADD COLUMN IF NOT EXISTS residence_city VARCHAR(120),
+          ADD COLUMN IF NOT EXISTS residence_state VARCHAR(120),
+          ADD COLUMN IF NOT EXISTS residence_pin VARCHAR(10);
+        CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique
+          ON users (LOWER(email)) WHERE email IS NOT NULL;
+        CREATE UNIQUE INDEX IF NOT EXISTS users_username_unique
+          ON users (LOWER(username)) WHERE username IS NOT NULL;
+        CREATE TABLE IF NOT EXISTS password_credentials (
+          user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+          password_hash VARCHAR(255) NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `);
+    })().catch((error) => {
+      passwordAuthSchemaReady = undefined;
+      throw error;
+    });
+  }
+  return passwordAuthSchemaReady;
+}
+
 router.post('/login', authLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    await ensurePasswordAuthSchema();
     const parsed = LoginSchema.safeParse(req.body);
     if (!parsed.success) throw new ValidationError('Invalid login details', parsed.error.flatten());
 
@@ -106,6 +142,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response, next: Nex
 
 router.post('/register', authLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    await ensurePasswordAuthSchema();
     const parsed = RegisterSchema.safeParse(req.body);
     if (!parsed.success) throw new ValidationError('Invalid registration details', parsed.error.flatten());
     if (parsed.data.password !== parsed.data.confirmPassword) {
