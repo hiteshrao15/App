@@ -37,6 +37,25 @@ const VerifyOtpSchema = z.object({
   otp: z.string().length(6, 'OTP must be 6 digits').regex(/^\d{6}$/, 'OTP must be numeric'),
 });
 
+const LoginSchema = z.object({
+  identifier: z.string().min(1),
+  password: z.string().min(8).max(128),
+});
+
+const RegisterSchema = z.object({
+  fullName: z.string().min(1).max(160),
+  email: z.string().email(),
+  username: z.string().regex(/^[a-zA-Z0-9._-]{3,80}$/),
+  password: z.string().min(8).max(128),
+  confirmPassword: z.string(),
+  phone: z.string().optional(),
+  city: z.string().min(1).max(120),
+  state: z.string().min(1).max(120),
+  pinCode: z.string().min(1).max(10),
+  addressLine1: z.string().min(1).max(300),
+  role: z.enum(['customer', 'store_owner']),
+});
+
 // Normalize phone (ensure it starts with +91 for Indian numbers)
 function normalizePhone(phone: string, countryCode: string): string {
   const clean = phone.replace(/\s+/g, '');
@@ -44,6 +63,85 @@ function normalizePhone(phone: string, countryCode: string): string {
   if (clean.startsWith('0')) return `${countryCode}${clean.slice(1)}`;
   return `${countryCode}${clean}`;
 }
+
+router.post('/login', authLimiter, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parsed = LoginSchema.safeParse(req.body);
+    if (!parsed.success) throw new ValidationError('Invalid login details', parsed.error.flatten());
+
+    const { identifier, password } = parsed.data;
+    const { rows } = await getPool().query(
+      `SELECT u.id, u.phone, u.role, u.status, p.password_hash
+       FROM users u JOIN password_credentials p ON p.user_id = u.id
+       WHERE lower(coalesce(u.email, '')) = lower($1)
+          OR lower(coalesce(u.username, '')) = lower($1)
+       LIMIT 1`,
+      [identifier]
+    );
+    if (!rows.length || !(await bcrypt.compare(password, rows[0].password_hash))) {
+      throw new UnauthorizedError('Invalid credentials');
+    }
+    if (rows[0].status !== 'active') {
+      throw new AppError(403, 'ACCOUNT_NOT_APPROVED', 'Your account is not approved yet.');
+    }
+
+    const sessionId = uuidv4();
+    const token = signToken({
+      id: rows[0].id,
+      phone: rows[0].phone || '',
+      role: rows[0].role,
+      sessionId,
+    });
+    await getPool().query(
+      `INSERT INTO sessions (id, user_id, token_hash, ip_address, expires_at)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [sessionId, rows[0].id, crypto.createHash('sha256').update(token).digest('hex'),
+        req.ip, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
+    );
+    res.json({ token, user: { id: rows[0].id, phone: rows[0].phone || '' } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/register', authLimiter, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parsed = RegisterSchema.safeParse(req.body);
+    if (!parsed.success) throw new ValidationError('Invalid registration details', parsed.error.flatten());
+    if (parsed.data.password !== parsed.data.confirmPassword) {
+      throw new ValidationError('Passwords do not match');
+    }
+
+    const data = parsed.data;
+    const pool = getPool();
+    const existing = await pool.query(
+      `SELECT 1 FROM users
+       WHERE lower(email) = lower($1) OR lower(username) = lower($2) LIMIT 1`,
+      [data.email, data.username]
+    );
+    if (existing.rowCount) throw new AppError(409, 'ACCOUNT_EXISTS', 'An account with these credentials already exists.');
+
+    await withTransaction(async (client) => {
+      const { rows } = await client.query(
+        `INSERT INTO users
+          (phone, role, status, display_name, email, username, address_line1,
+           residence_city, residence_state, residence_pin)
+         VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id`,
+        [data.phone ? normalizePhone(data.phone, '+91') : null, data.role, data.fullName,
+          data.email, data.username, data.addressLine1, data.city, data.state, data.pinCode]
+      );
+      await client.query(
+        `INSERT INTO password_credentials (user_id, password_hash) VALUES ($1, $2)`,
+        [rows[0].id, await bcrypt.hash(data.password, 12)]
+      );
+    });
+    res.status(202).json({ status: 'active', message: 'Registration completed successfully.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 /**
  * @swagger

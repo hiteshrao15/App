@@ -4,5 +4,5 @@ services:
     runtime: node
     rootDir: .
     buildCommand: npm ci --include=dev && npm run build --workspace=services/api
-    startCommand: npm run start --workspace=services/api
+    startCommand: npm run migrate --workspace=services/api && npm run start --workspace=services/api
     healthCheckPath: /health

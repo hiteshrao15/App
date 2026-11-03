@@ -1,11 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 
 const configuredApiUrl = (process.env as Record<string, string | undefined>).EXPO_PUBLIC_API_URL?.trim();
 const API_BASE = (configuredApiUrl || (
-  Platform.OS === 'android'
-    ? 'http://10.0.2.2:3000/api/v1'
-    : 'http://localhost:3000/api/v1'
+  'https://app-jod2.onrender.com/api/v1'
 )).replace(/\/+$/, '');
 const TOKEN_KEY = '@bottlebazaar_access_token';
 const VOUCHER_TOKEN_KEY = '@bottlebazaar_voucher_tokens';
@@ -86,6 +83,12 @@ async function request(path: string, options: RequestInit = {}): Promise<unknown
       throw new ApiError(response.status, typeof body.error === 'string' ? body.error : 'The service is unavailable.');
     }
     return body;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError(0, 'The server took too long to respond. Please try again.');
+    }
+    throw new ApiError(0, 'Unable to connect to the server. Check your internet connection and try again.');
   } finally {
     clearTimeout(timeout);
   }
@@ -207,21 +210,30 @@ const SAMPLE_SOHNA_DEALS: DealItem[] = [
 ];
 
 export const mobileApi = {
-  async requestOtp(phone: string): Promise<void> {
-    await request('/auth/request-otp', {
+  async login(identifier: string, password: string): Promise<{ token: string; user: ApiUser }> {
+    const body = await request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ phone: phone.replace(/\s+/g, ''), countryCode: '+91' }),
-    });
-  },
-
-  async verifyOtp(phone: string, otp: string): Promise<{ token: string; user: ApiUser }> {
-    const body = await request('/auth/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ phone: phone.replace(/\s+/g, ''), otp }),
+      body: JSON.stringify({ identifier, password }),
     }) as { token: string; user: Record<string, unknown> };
     await AsyncStorage.setItem(TOKEN_KEY, body.token);
     const user = await this.getProfile();
     return { token: body.token, user };
+  },
+
+  async register(input: {
+    fullName: string;
+    email: string;
+    username: string;
+    password: string;
+    confirmPassword: string;
+    phone?: string;
+    city: string;
+    state: string;
+    pinCode: string;
+    addressLine1: string;
+    role: 'customer' | 'store_owner';
+  }): Promise<void> {
+    await request('/auth/register', { method: 'POST', body: JSON.stringify(input) });
   },
 
   async getProfile(): Promise<ApiUser> {
