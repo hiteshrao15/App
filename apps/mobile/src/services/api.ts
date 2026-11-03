@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const configuredApiUrl = (process.env as Record<string, string | undefined>).EXPO_PUBLIC_API_URL?.trim();
-const API_BASE = (configuredApiUrl || (
-  'https://app-jod2.onrender.com/api/v1'
-)).replace(/\/+$/, '');
+const HOSTED_API_BASE = 'https://app-jod2.onrender.com/api/v1';
+const API_BASES = [...new Set([
+  configuredApiUrl,
+  HOSTED_API_BASE,
+].filter((url): url is string => Boolean(url)).map((url) => url.replace(/\/+$/, '')))];
 const TOKEN_KEY = '@bottlebazaar_access_token';
 const VOUCHER_TOKEN_KEY = '@bottlebazaar_voucher_tokens';
 
@@ -69,29 +71,34 @@ export class ApiError extends Error {
 }
 
 async function request(path: string, options: RequestInit = {}): Promise<unknown> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
   const token = await AsyncStorage.getItem(TOKEN_KEY);
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  try {
-    const response = await fetch(`${API_BASE}${path}`, { ...options, headers, signal: controller.signal });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new ApiError(response.status, typeof body.error === 'string' ? body.error : 'The service is unavailable.');
+  let lastNetworkError: unknown;
+  for (const apiBase of API_BASES) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await fetch(`${apiBase}${path}`, { ...options, headers, signal: controller.signal });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new ApiError(response.status, typeof body.error === 'string' ? body.error : 'The service is unavailable.');
+      }
+      return body;
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      lastNetworkError = error;
+    } finally {
+      clearTimeout(timeout);
     }
-    return body;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new ApiError(0, 'The server took too long to respond. Please try again.');
-    }
-    throw new ApiError(0, 'Unable to connect to the server. Check your internet connection and try again.');
-  } finally {
-    clearTimeout(timeout);
   }
+
+  if (lastNetworkError instanceof Error && lastNetworkError.name === 'AbortError') {
+    throw new ApiError(0, 'The server took too long to respond. Please try again.');
+  }
+  throw new ApiError(0, 'Unable to connect to the server. Check your internet connection and try again.');
 }
 
 const mapStore = (store: Record<string, unknown>): StoreItem => ({
